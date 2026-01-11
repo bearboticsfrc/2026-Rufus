@@ -11,8 +11,11 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -23,8 +26,13 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
+import frc.robot.vision.Vision;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Supplier;
+import org.photonvision.EstimatedRobotPose;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements Subsystem so it can easily
@@ -53,6 +61,23 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       new SwerveRequest.SysIdSwerveSteerGains();
   private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization =
       new SwerveRequest.SysIdSwerveRotation();
+
+  /** Notifier for updating pose based on vision measurements. */
+  private final Notifier poseEstimationNotifier = new Notifier(this::poseEstimationPeriodic);
+
+  @Logged(importance = Importance.CRITICAL, warnForNonLoggableTypes = false)
+  private final Vision vision = new Vision(Arrays.asList(VisionConstants.FRONT_LEFT_CAMERA));
+
+  @Logged(name = "Camera View")
+  private Pose3d latestCameraPose = new Pose3d();
+
+  // VisionConstants.FRONT_RIGHT_CAMERA,
+  //  VisionConstants.REAR_CAMERA));
+
+  @Logged(name = "Camera view")
+  public Pose3d getCameraView() {
+    return new Pose3d(getState().Pose).transformBy(VisionConstants.ROBOT_TO_FRONT_LEFT_CAMERA);
+  }
 
   /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
   private final SysIdRoutine m_sysIdRoutineTranslation =
@@ -122,28 +147,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       startSimThread();
     }
     configureAutoBuilder();
-  }
-
-  /**
-   * Constructs a CTRE SwerveDrivetrain using the specified constants.
-   *
-   * <p>This constructs the underlying hardware devices, so users should not construct the devices
-   * themselves. If they need the devices, they can access them through getters in the classes.
-   *
-   * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
-   * @param odometryUpdateFrequency The frequency to run the odometry loop. If unspecified or set to
-   *     0 Hz, this is 250 Hz on CAN FD, and 100 Hz on CAN 2.0.
-   * @param modules Constants for each specific module
-   */
-  public CommandSwerveDrivetrain(
-      SwerveDrivetrainConstants drivetrainConstants,
-      double odometryUpdateFrequency,
-      SwerveModuleConstants<?, ?, ?>... modules) {
-    super(drivetrainConstants, odometryUpdateFrequency, modules);
-    if (Utils.isSimulation()) {
-      startSimThread();
-    }
-    configureAutoBuilder();
+    poseEstimationNotifier.startPeriodic(0.02);
   }
 
   /**
@@ -177,6 +181,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       startSimThread();
     }
     configureAutoBuilder();
+    poseEstimationNotifier.startPeriodic(0.02);
   }
 
   private void configureAutoBuilder() {
@@ -207,6 +212,26 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       DriverStation.reportError(
           "Failed to load PathPlanner config and configure AutoBuilder", ex.getStackTrace());
     }
+  }
+
+  public void poseEstimationPeriodic() {
+    List<EstimatedRobotPose> estimatedPoses = vision.getEstimatedGlobalPoses();
+
+    for (EstimatedRobotPose estimatedPose : estimatedPoses) {
+      addVisionMeasurement(estimatedPose, vision.getEstimationStdDevs());
+    }
+  }
+
+  /**
+   * Adds vision-based pose estimation measurements to the drivetrain.
+   *
+   * @param estimatedRobotPose The estimated robot pose from vision processing.
+   */
+  public void addVisionMeasurement(EstimatedRobotPose estimatedRobotPose, Matrix<N3, N1> stdDevs) {
+    Pose2d estPose = estimatedRobotPose.estimatedPose.toPose2d();
+
+    addVisionMeasurement(
+        estPose, Utils.fpgaToCurrentTime(estimatedRobotPose.timestampSeconds), stdDevs);
   }
 
   /**
@@ -276,6 +301,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
               /* use the measured time delta, get battery voltage from WPILib */
               updateSimState(deltaTime, RobotController.getBatteryVoltage());
+
+              // Update camera simulation
+              vision.simulationPeriodic(getState().Pose);
+
+              var debugField = vision.getSimDebugField();
+              debugField.getObject("EstimatedRobot").setPose(getState().Pose);
+              // debugField.getObject("EstimatedRobotModules").setPoses(getState().Speeds);
+
             });
     m_simNotifier.startPeriodic(kSimLoopPeriod);
   }

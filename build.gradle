@@ -9,12 +9,12 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-
+project.compileJava.dependsOn(spotlessApply)
 spotless {
    java {
       target fileTree('.') {
             include '**/*.java'
-            exclude '**/build/**', '**/build-*/**'
+            exclude '**/build/**', '**/build-*/**', "**/java/frc/robot/LimelightHelpers.java", "**/java/frc/robot/generated/TunerConstants.java"
       }
       toggleOffOn()
       googleJavaFormat()
