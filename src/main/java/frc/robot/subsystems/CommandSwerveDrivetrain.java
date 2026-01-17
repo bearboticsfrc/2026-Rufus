@@ -39,7 +39,7 @@ import org.photonvision.EstimatedRobotPose;
  * be used in command-based projects.
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
-  private static final double kSimLoopPeriod = 0.005; // 5 ms
+  private static final double kSimLoopPeriod = 0.05; // .005 // 5 ms
   private Notifier m_simNotifier = null;
   private double m_lastSimTime;
 
@@ -68,7 +68,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   @Logged(importance = Importance.CRITICAL, warnForNonLoggableTypes = false)
   private final Vision vision = new Vision(Arrays.asList(VisionConstants.FRONT_LEFT_CAMERA));
 
-  @Logged(name = "Camera View")
+  @Logged(name = "Last Camera Pose")
   private Pose3d latestCameraPose = new Pose3d();
 
   // VisionConstants.FRONT_RIGHT_CAMERA,
@@ -182,6 +182,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
     configureAutoBuilder();
     poseEstimationNotifier.startPeriodic(0.02);
+  }
+
+  @Override
+  public void resetPose(Pose2d newPose) {
+    super.resetPose(newPose);
+    vision.resetSimPose(newPose);
   }
 
   private void configureAutoBuilder() {

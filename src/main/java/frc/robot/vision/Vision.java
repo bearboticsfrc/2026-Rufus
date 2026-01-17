@@ -26,6 +26,7 @@ package frc.robot.vision;
 
 import static frc.robot.constants.VisionConstants.*;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.Matrix;
@@ -35,9 +36,13 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import frc.robot.Robot;
 import frc.robot.constants.VisionConstants;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -67,6 +72,9 @@ public class Vision {
   @Logged(name = "Camera Poses", importance = Importance.CRITICAL)
   private Map<String, Pose2d> latestCameraPose = new HashMap<String, Pose2d>();
 
+  @Logged(name = "Last Camera Pose", importance = Importance.CRITICAL)
+  private Pose2d lastCameraPose = new Pose2d();
+
   @Logged(name = "Target Poses", importance = Importance.CRITICAL)
   private final List<Pose2d> targetPoses = new ArrayList<>();
 
@@ -93,7 +101,7 @@ public class Vision {
         visionSim.addAprilTags(APRIL_TAG_FIELD_LAYOUT);
         // Create simulated camera properties. These can be set to mimic your actual camera.
         SimCameraProperties cameraProp = new SimCameraProperties();
-        cameraProp.setCalibration(960, 720, Rotation2d.fromDegrees(90));
+        cameraProp.setCalibration(960, 720, Rotation2d.fromDegrees(70));
         cameraProp.setCalibError(0.35, 0.10);
         cameraProp.setFPS(15);
         cameraProp.setAvgLatencyMs(50);
@@ -105,8 +113,8 @@ public class Vision {
         visionSim.addCamera(cameraSim, visionCamera.getTransform());
 
         // Enable the raw and processed streams. These are enabled by default.
-        cameraSim.enableRawStream(true);
-        cameraSim.enableProcessedStream(true);
+        // cameraSim.enableRawStream(true);
+        // cameraSim.enableProcessedStream(true);
 
         // Enable drawing a wireframe visualization of the field to the camera streams.
         // This is extremely resource-intensive and is disabled by default.
@@ -163,6 +171,7 @@ public class Vision {
 
         if (visionEstimation.isPresent()) {
           latestCameraPose.put(camera.getName(), visionEstimation.get().estimatedPose.toPose2d());
+          lastCameraPose = visionEstimation.get().estimatedPose.toPose2d();
         }
       }
     }
@@ -223,12 +232,14 @@ public class Vision {
   }
 
   private void updatedTargetPoses(PhotonPipelineResult change) {
-    for (PhotonTrackedTarget trackedTarget : change.getTargets()) {
-      int fiducialId = trackedTarget.getFiducialId();
-      Pose3d tagPose = VisionConstants.APRIL_TAG_FIELD_LAYOUT.getTagPose(fiducialId).get();
+    // for (PhotonTrackedTarget trackedTarget : change.getTargets()) {
+    PhotonTrackedTarget trackedTarget = change.getBestTarget();
 
-      targetPoses.add(tagPose.toPose2d());
-    }
+    int fiducialId = trackedTarget.getFiducialId();
+    Pose3d tagPose = VisionConstants.APRIL_TAG_FIELD_LAYOUT.getTagPose(fiducialId).get();
+
+    targetPoses.add(tagPose.toPose2d());
+    // }
   }
 
   private boolean isTooFar(PhotonPipelineResult result) {
@@ -253,5 +264,15 @@ public class Vision {
   public Field2d getSimDebugField() {
     if (!Robot.isSimulation()) return null;
     return visionSim.getDebugField();
+  }
+
+  public static AprilTagFieldLayout loadAprilTagLayoutField() {
+    try {
+      Path file = Paths.get(Filesystem.getDeployDirectory().getPath(), "2026-rebuilt-welded.json");
+      return new AprilTagFieldLayout(file);
+    } catch (IOException ex) {
+      System.out.println("AprilTagFieldLayout not found: " + ex);
+    }
+    return null;
   }
 }

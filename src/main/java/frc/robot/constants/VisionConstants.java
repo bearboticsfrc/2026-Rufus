@@ -15,18 +15,23 @@ import edu.wpi.first.units.measure.Distance;
 import frc.robot.vision.VisionCamera;
 
 public class VisionConstants {
-  public static final Distance CULLING_DISTANCE = Meters.of(2.5);
+  public static final Distance CULLING_DISTANCE = Meters.of(3); // Meters.of(2.5);
 
-  public static final double CULLING_AMBIGUITY = 0.2;
+  public static final double CULLING_AMBIGUITY = 0.5; // 0.2;
 
   private static final String FRONT_LEFT_CAMERA_NAME = "OV9281FrontLeft";
   private static final String FRONT_RIGHT_CAMERA_NAME = "OV9281FrontRight";
   private static final String REAR_CAMERA_NAME = "OV9281Rear";
 
-  public static final Transform3d ROBOT_TO_FRONT_LEFT_CAMERA =
+  public static final Transform3d ROBOT_TO_FRONT_LEFT_CAMERA_orig =
       new Transform3d(
           new Translation3d(.1524, 0.254, 0.4617),
           new Rotation3d(Radians.zero(), Degrees.of(22), Degrees.zero()));
+
+  public static final Transform3d ROBOT_TO_FRONT_LEFT_CAMERA =
+      new Transform3d(
+          new Translation3d(-.75, 0.3, 0.60),
+          new Rotation3d(Radians.zero(), Degrees.of(-15), Degrees.zero()));
 
   private static final Transform3d ROBOT_TO_FRONT_RIGHT_CAMERA =
       new Transform3d(
@@ -53,6 +58,9 @@ public class VisionConstants {
 
   public static final AprilTagFieldLayout APRIL_TAG_FIELD_LAYOUT =
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+
+  // public static final AprilTagFieldLayout APRIL_TAG_FIELD_LAYOUT =
+  // Vision.loadAprilTagLayoutField();
 
   public static final AprilTagFieldLayout REEF_TAGS_ONLY_LAYOUT =
       new AprilTagFieldLayout(
