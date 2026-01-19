@@ -5,33 +5,27 @@
     "data": {
       "commands": [
         {
-          "type": "wait",
+          "type": "path",
           "data": {
-            "waitTime": 2.0
+            "pathName": "Score 6 - Depot"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Shoot and pick up centre"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 2.0
+            "pathName": "Depot - Score 1 - Outpost - Score 5"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Shoot from Centre"
+            "pathName": "Score 5 - intake"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Mock Kickoff",
+  "folder": "Rebuilt Kickoff",
   "choreoAuto": false
 }

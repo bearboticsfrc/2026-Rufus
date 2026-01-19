@@ -1,0 +1,102 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.5321213840793924,
+        "y": 0.8162123231630063
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 4.531787191743788,
+        "y": 0.7804389686602332
+      },
+      "isLocked": false,
+      "linkedName": "Score 4"
+    },
+    {
+      "anchor": {
+        "x": 5.527581094277872,
+        "y": 0.6533141100084447
+      },
+      "prevControl": {
+        "x": 5.3234340019311075,
+        "y": 0.5090090003055605
+      },
+      "nextControl": {
+        "x": 6.857928251078461,
+        "y": 1.5936943534798442
+      },
+      "isLocked": false,
+      "linkedName": "Right Trench"
+    },
+    {
+      "anchor": {
+        "x": 7.785645455025339,
+        "y": 2.2846109586148646
+      },
+      "prevControl": {
+        "x": 7.60557901796186,
+        "y": 2.1111863979457826
+      },
+      "nextControl": {
+        "x": 7.965711892088818,
+        "y": 2.4580355192839467
+      },
+      "isLocked": false,
+      "linkedName": "Right Intake"
+    },
+    {
+      "anchor": {
+        "x": 5.527581094277872,
+        "y": 0.6533141100084447
+      },
+      "prevControl": {
+        "x": 6.099862585051625,
+        "y": 0.7158752633862591
+      },
+      "nextControl": {
+        "x": 5.279061663455492,
+        "y": 0.626146252092885
+      },
+      "isLocked": false,
+      "linkedName": "Right Trench"
+    },
+    {
+      "anchor": {
+        "x": 3.5321213840793924,
+        "y": 0.8162123231630063
+      },
+      "prevControl": {
+        "x": 3.8297312696064463,
+        "y": 0.7544731055626623
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Score 4"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 60.380828402759796
+  },
+  "reversed": false,
+  "folder": "Rebuilt KickOff",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 60.380828402759796
+  },
+  "useDefaultConstraints": true
+}

@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 5.5154933389967,
+        "y": 2.6001870414882546
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 5.762936173608533,
+        "y": 2.5072307547846293
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 8.46549691440623,
+        "y": 1.1225651154197445
+      },
+      "prevControl": {
+        "x": 7.290738473655466,
+        "y": 1.6933878091526071
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Trench pickup"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": "Both trench Score",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}

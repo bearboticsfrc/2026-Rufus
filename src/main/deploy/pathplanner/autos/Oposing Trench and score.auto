@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "path",
+          "data": {
+            "pathName": "To Oponent trench pickup"
+          }
+        },
+        {
           "type": "wait",
           "data": {
             "waitTime": 2.0
@@ -13,19 +19,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Shoot and pick up centre"
+            "pathName": "to scoring pose From oponent Trench"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 3.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "To ally trench from Scoring 1"
           }
         },
         {
           "type": "wait",
           "data": {
             "waitTime": 2.0
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Shoot from Centre"
           }
         }
       ]

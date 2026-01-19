@@ -103,15 +103,15 @@
     },
     {
       "waypointRelativePos": 2.822633148521506,
-      "rotationDegrees": 46.28467151990402
+      "rotationDegrees": 46.28467151990403
     }
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 3.5,
-    "maxAcceleration": 3.2,
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -122,7 +122,7 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Slalam Chalange",
   "idealStartingState": {
     "velocity": 0,
     "rotation": -33.7081732102386

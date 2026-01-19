@@ -1,0 +1,73 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Score 2 to Outpost"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Outpost to Score 2"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Score 2 to Right Bump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Right Bump to Intake to Right Bump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Right Bump to Score 2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Score 2 to Right Bump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Right Bump to Intake to Right Bump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Right Bump to Score 2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Score 2 to Climb"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Rebuilt Kickoff",
+  "choreoAuto": false
+}
