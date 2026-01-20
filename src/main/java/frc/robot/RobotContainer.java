@@ -56,6 +56,7 @@ public class RobotContainer {
   @Logged(importance = Importance.CRITICAL)
   private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
+  @Logged(importance = Importance.CRITICAL)
   private final Turret turret = new Turret(drivetrain);
 
   /* Path follower */
