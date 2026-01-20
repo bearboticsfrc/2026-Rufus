@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Turret;
 
 public class RobotContainer {
   private double MaxSpeed =
@@ -53,7 +54,9 @@ public class RobotContainer {
   private final CommandXboxController joystick = new CommandXboxController(0);
 
   @Logged(importance = Importance.CRITICAL)
-  public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+  private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+
+  private final Turret turret = new Turret(drivetrain);
 
   /* Path follower */
   private final SendableChooser<Command> autoChooser;
