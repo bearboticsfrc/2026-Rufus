@@ -71,9 +71,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   @Logged(name = "Last Camera Pose")
   private Pose3d latestCameraPose = new Pose3d();
 
-  // VisionConstants.FRONT_RIGHT_CAMERA,
-  //  VisionConstants.REAR_CAMERA));
-
   @Logged(name = "Camera view")
   public Pose3d getCameraView() {
     return new Pose3d(getState().Pose).transformBy(VisionConstants.ROBOT_TO_FRONT_LEFT_CAMERA);
@@ -314,7 +311,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
               var debugField = vision.getSimDebugField();
               debugField.getObject("EstimatedRobot").setPose(getState().Pose);
               // debugField.getObject("EstimatedRobotModules").setPoses(getState().Speeds);
-
             });
     m_simNotifier.startPeriodic(kSimLoopPeriod);
   }

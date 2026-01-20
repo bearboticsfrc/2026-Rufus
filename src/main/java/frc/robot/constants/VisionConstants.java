@@ -31,7 +31,7 @@ public class VisionConstants {
   public static final Transform3d ROBOT_TO_FRONT_LEFT_CAMERA =
       new Transform3d(
           new Translation3d(-.75, 0.3, 0.60),
-          new Rotation3d(Radians.zero(), Degrees.of(-15), Degrees.zero()));
+          new Rotation3d(Radians.zero(), Degrees.of(-5), Degrees.zero()));
 
   private static final Transform3d ROBOT_TO_FRONT_RIGHT_CAMERA =
       new Transform3d(
