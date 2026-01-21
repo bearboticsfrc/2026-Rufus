@@ -187,7 +187,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     vision.resetSimPose(newPose);
   }
 
+  // gets the current robot posistion
+  public Pose2d getPose() {
+    return getState().Pose;
+  }
+
   private void configureAutoBuilder() {
+
     try {
       var config = RobotConfig.fromGUISettings();
       AutoBuilder.configure(
