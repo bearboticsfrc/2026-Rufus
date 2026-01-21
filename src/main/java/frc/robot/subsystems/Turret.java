@@ -1,19 +1,22 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Degrees;
-
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.lang.Math.*;
 
 public class Turret extends SubsystemBase {
-  private static final double[] redHub = {4.74, 4.166};
-  private static final double[] blueHub = {11.951, 4.166};
-  @Logged public double redAngle;
-  @Logged public double blueAngle;
+  // redHub = {11.93, 4.03};
+  // blueHub = {4.63, 4.03};
   private CommandSwerveDrivetrain drive;
+
+  Translation2d redHub = new Translation2d(11.91, 4.03);
+  Translation2d blueHub = new Translation2d(4.63, 4.03);
+  @Logged Rotation2d redAngle;
+  @Logged Rotation2d blueAngle;
+  @Logged Pose2d robotPose;
 
   public Turret(CommandSwerveDrivetrain drive) {
     this.drive = drive;
@@ -21,31 +24,21 @@ public class Turret extends SubsystemBase {
 
   @Override
   public void periodic() {
-    redTurretRotation();
-    blueTurretRotation();
+    turretRotation();
   }
 
-  public void redTurretRotation() {
-    redAngle =
-        Math.toDegrees(
-            Math.atan((drive.getPose().getX()) - redHub[0])
-                / ((drive.getPose().getY()) - redHub[1]));
+  public void turretRotation() {
+    redAngle = ((redHub.minus(drive.getPose().getTranslation())).getAngle());
+    blueAngle = ((blueHub.minus(drive.getPose().getTranslation())).getAngle());
   }
 
-  public void blueTurretRotation() {
-    blueAngle =
-        Math.toDegrees(
-            Math.atan((drive.getPose().getX()) - blueHub[0])
-                / ((drive.getPose().getY()) - blueHub[1]));
+  @Logged
+  public Pose2d getredPose() {
+    return new Pose2d(drive.getPose().getTranslation(), redAngle);
   }
 
   @Logged
   public Pose2d getBluePose() {
-    return new Pose2d(drive.getPose().getTranslation(), new Rotation2d(Degrees.of((blueAngle))));
-  }
-
-  @Logged
-  public Pose2d getRedPose() {
-    return new Pose2d(drive.getPose().getTranslation(), new Rotation2d(Degrees.of((redAngle))));
+    return new Pose2d(drive.getPose().getTranslation(), blueAngle);
   }
 }
