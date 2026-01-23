@@ -14,8 +14,8 @@ public class Turret extends SubsystemBase {
 
   Translation2d redHub = new Translation2d(11.91, 4.03);
   Translation2d blueHub = new Translation2d(4.63, 4.03);
-  @Logged Rotation2d redAngle;
-  @Logged Rotation2d blueAngle;
+  Translation2d hub;
+  @Logged Rotation2d angle;
   @Logged Pose2d robotPose;
 
   public Turret(CommandSwerveDrivetrain drive) {
@@ -27,18 +27,22 @@ public class Turret extends SubsystemBase {
     turretRotation();
   }
 
+  public Translation2d gethub() {
+    if (drive.getPose().getX() < 8.3) {
+      hub = blueHub;
+    }
+    if (drive.getPose().getX() > 8.3) {
+      hub = redHub;
+    }
+    return hub;
+  }
+
   public void turretRotation() {
-    redAngle = ((redHub.minus(drive.getPose().getTranslation())).getAngle());
-    blueAngle = ((blueHub.minus(drive.getPose().getTranslation())).getAngle());
+    angle = ((gethub().minus(drive.getPose().getTranslation())).getAngle());
   }
 
   @Logged
-  public Pose2d getredPose() {
-    return new Pose2d(drive.getPose().getTranslation(), redAngle);
-  }
-
-  @Logged
-  public Pose2d getBluePose() {
-    return new Pose2d(drive.getPose().getTranslation(), blueAngle);
+  public Pose2d getTurretPose() {
+    return new Pose2d(drive.getPose().getTranslation(), angle);
   }
 }
