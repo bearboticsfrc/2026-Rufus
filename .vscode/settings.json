@@ -59,5 +59,6 @@
   ],
   "java.dependency.enableDependencyCheckup": false,
 
-  "wpilib.skipSelectSimulateExtension": true
+  "wpilib.skipSelectSimulateExtension": true,
+  "java.debug.settings.onBuildFailureProceed": true
 }
