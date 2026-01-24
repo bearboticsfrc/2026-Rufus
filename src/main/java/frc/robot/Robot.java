@@ -20,7 +20,6 @@ public class Robot extends TimedRobot {
 
   private Command m_autonomousCommand;
 
-  // @Logged(importance = Importance.CRITICAL)
   private final RobotContainer m_robotContainer;
 
   public Robot() {

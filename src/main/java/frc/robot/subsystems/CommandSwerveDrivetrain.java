@@ -75,6 +75,34 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     return new Pose3d(getState().Pose).transformBy(VisionConstants.ROBOT_TO_FRONT_LEFT_CAMERA);
   }
 
+  @Logged(name = "PigeonPitch")
+  public double getPigeonPitch() 
+  {
+    return getPigeon2().getPitch().getValueAsDouble();
+  }
+
+  @Logged(name = "PigeonRoll")
+  public double getPigeonRoll() 
+  {
+    return getPigeon2().getRoll().getValueAsDouble();
+  }
+
+  @Logged(name = "PigeonYaw")
+  public double getPigeonYaw() 
+  {
+    return getPigeon2().getYaw().getValueAsDouble();
+  }
+
+  @Logged(name = "IsOnBump")
+  public boolean isOnBump()
+  {
+    if (Math.abs(getPigeonPitch()) >= 2.0 || Math.abs(getPigeonRoll()) >= 2)
+    {
+      return true;
+    }
+    return false;
+  }
+
   /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
   private final SysIdRoutine m_sysIdRoutineTranslation =
       new SysIdRoutine(
