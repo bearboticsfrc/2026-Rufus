@@ -15,14 +15,9 @@ public class Turret extends SubsystemBase {
   Translation2d redHub = new Translation2d(11.91, 4.03);
   Translation2d blueHub = new Translation2d(4.63, 4.03);
   Translation2d hub;
-<<<<<<< Updated upstream
   @Logged Rotation2d robotRotation = drive.getPose().getRotation();
   @Logged Rotation2d turretRotation;
-=======
-  @Logged Rotation2d turreRotation;
->>>>>>> Stashed changes
   @Logged Pose2d robotPose;
-  @Logged Rotation2d robotRotation = drive.getPose().getRotation();
   @Logged Rotation2d turretRelativeRotation;
 
   public Turret(CommandSwerveDrivetrain drive) {
@@ -35,7 +30,7 @@ public class Turret extends SubsystemBase {
   }
 
   public Translation2d gethub() {
-    //adjusts which hub the turret rotates around based off the side of the field the robot is on
+    // adjusts which hub the turret rotates around based off the side of the field the robot is on
     if (drive.getPose().getX() < 8.3) {
       hub = blueHub;
     }
@@ -44,27 +39,21 @@ public class Turret extends SubsystemBase {
     }
     return hub;
   }
-  //constantly gets the angle from the robot to the hub (turret rotation relative to hub)
+
+  // constantly gets the angle from the robot to the hub (turret rotation relative to hub)
   public void turretRotation() {
-<<<<<<< Updated upstream
     turretRotation = ((gethub().minus(drive.getPose().getTranslation())).getAngle());
-=======
-    turreRotation = ((gethub().minus(drive.getPose().getTranslation())).getAngle());
->>>>>>> Stashed changes
   }
 
-  //turrets rotation relative to robot
+  // turrets rotation relative to robot
   public Rotation2d turretRelativeRotation() {
-    turretRelativeRotation = turreRotation.minus(robotRotation);
+    turretRelativeRotation = turretRotation.minus(robotRotation);
     return turretRelativeRotation;
   }
+
   //creates a new Pose2d that rotates around the hub
   @Logged
   public Pose2d getTurretPose() {
-<<<<<<< Updated upstream
     return new Pose2d(drive.getPose().getTranslation(), turretRotation);
-=======
-    return new Pose2d(drive.getPose().getTranslation(), turreRotation);
->>>>>>> Stashed changes
   }
 }
