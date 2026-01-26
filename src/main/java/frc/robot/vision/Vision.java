@@ -39,11 +39,8 @@ public class Vision {
 
   private VisionSystemSim visionSim;
 
-  // @Logged(name = "Camera Poses", importance = Importance.CRITICAL)
+  @Logged(name = "Camera Poses", importance = Importance.CRITICAL)
   private Map<String, Pose2d> latestCameraPose = new HashMap<String, Pose2d>();
-
-  @Logged(name = "Last Camera Pose", importance = Importance.CRITICAL)
-  private Pose2d lastCameraPose = new Pose2d();
 
   @Logged(name = "Target Poses", importance = Importance.CRITICAL)
   private final List<Pose2d> targetPoses = new ArrayList<>();
@@ -140,7 +137,6 @@ public class Vision {
 
         if (visionEstimation.isPresent()) {
           latestCameraPose.put(camera.getName(), visionEstimation.get().estimatedPose.toPose2d());
-          lastCameraPose = visionEstimation.get().estimatedPose.toPose2d();
         }
       }
     }
@@ -219,7 +215,7 @@ public class Vision {
 
   // ----- Simulation
   public void simulationPeriodic(Pose2d robotSimPose) {
-    visionSim.update(robotSimPose);
+    // visionSim.update(robotSimPose);
   }
 
   /** Reset pose history of the robot in the vision system simulation. */

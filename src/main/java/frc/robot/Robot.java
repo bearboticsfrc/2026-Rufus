@@ -25,6 +25,7 @@ public class Robot extends TimedRobot {
   public Robot() {
     m_robotContainer = new RobotContainer();
     configureLogging();
+    DriverStation.silenceJoystickConnectionWarning(true);
   }
 
   public void configureLogging() {
