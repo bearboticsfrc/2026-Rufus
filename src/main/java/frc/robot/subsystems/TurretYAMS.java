@@ -16,8 +16,13 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.pathplanner.lib.util.FlippingUtil;
+
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -91,7 +96,41 @@ public class TurretYAMS extends SubsystemBase {
         .withAbsoluteEncoderOffsets(Rotations.of(-.343018), Rotations.of(-.451904));
   }
 
-  public TurretYAMS() {}
+  private final Supplier<Pose2d> poseSupplier;
+
+  public TurretYAMS(Supplier<Pose2d> poseSupplier) {
+    this.poseSupplier = poseSupplier;
+  }
+
+  Translation2d redHub = new Translation2d(11.91, 4.03);
+  Translation2d blueHub = new Translation2d(4.63, 4.03);
+  Translation2d hub;
+  @Logged Rotation2d robotRotation;
+  @Logged Rotation2d turretRotation;
+  @Logged Pose2d robotPose;
+  @Logged Rotation2d turretRelativeRotation;
+
+  public Translation2d gethub() {
+    return FlippingUtil.flipFieldPosition(blueHub);
+  }
+
+  // constantly gets the angle from the robot to the hub (turret rotation relative to hub)
+  public void updateTurretRotation() {
+    turretRotation = ((gethub().minus(poseSupplier.get().getTranslation())).getAngle());
+  }
+
+  // turrets rotation relative to robot
+  public Rotation2d turretRelativeRotation() {
+    robotRotation = poseSupplier.get().getRotation();
+    turretRelativeRotation = turretRotation.minus(robotRotation);
+    return turretRelativeRotation;
+  }
+
+  // creates a new Pose2d that rotates around the hub
+  @Logged
+  public Pose2d getTurretPose() {
+    return new Pose2d(poseSupplier.get().getTranslation(), turretRotation);
+  }
 
   @Logged
   public double getAbsoluteAngle() {
@@ -158,6 +197,8 @@ public class TurretYAMS extends SubsystemBase {
 
   @Override
   public void periodic() {
+
+    updateTurretRotation();
     turret.updateTelemetry();
   }
 

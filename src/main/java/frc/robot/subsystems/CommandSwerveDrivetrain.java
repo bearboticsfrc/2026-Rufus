@@ -86,6 +86,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     return (Math.abs(getPigeonPitch()) >= 2.0 || Math.abs(getPigeonRoll()) >= 2);
   }
 
+  public Pose2d getPose() {
+    return getState().Pose;
+  }
+
   /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
   private final SysIdRoutine m_sysIdRoutineTranslation =
       new SysIdRoutine(
