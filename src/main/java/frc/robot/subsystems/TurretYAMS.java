@@ -101,13 +101,10 @@ public class TurretYAMS extends SubsystemBase {
     this.poseSupplier = poseSupplier;
   }
 
-  Translation2d redHub = new Translation2d(11.91, 4.03);
   Translation2d blueHub = new Translation2d(4.63, 4.03);
-  Translation2d hub;
   @Logged Rotation2d robotRotation;
   @Logged Rotation2d turretRotation;
-  @Logged Pose2d robotPose;
-  @Logged Rotation2d turretRelativeRotation;
+  @Logged Angle turretRelativeRotation;
 
   public Translation2d gethub() {
     return FlippingUtil.flipFieldPosition(blueHub);
@@ -115,13 +112,28 @@ public class TurretYAMS extends SubsystemBase {
 
   // constantly gets the angle from the robot to the hub (turret rotation relative to hub)
   public void updateTurretRotation() {
+    robotRotation = poseSupplier.get().getRotation();
     turretRotation = ((gethub().minus(poseSupplier.get().getTranslation())).getAngle());
+    turretRelativeRotation = Degrees.of(robotRotation.minus(turretRotation).getDegrees());
+  }
+
+  @Logged
+  public double getTurretRotationDegrees() {
+    return turretRotation.getDegrees();
+  }
+
+  @Logged
+  public double getRobotRotationDegrees() {
+    return robotRotation.getDegrees();
+  }
+
+  @Logged
+  public double getTurretRelativeRotationDegrees() {
+    return turretRelativeRotation.in(Degrees);
   }
 
   // turrets rotation relative to robot
-  public Rotation2d turretRelativeRotation() {
-    robotRotation = poseSupplier.get().getRotation();
-    turretRelativeRotation = turretRotation.minus(robotRotation);
+  public Angle turretRelativeRotation() {
     return turretRelativeRotation;
   }
 
@@ -196,7 +208,6 @@ public class TurretYAMS extends SubsystemBase {
 
   @Override
   public void periodic() {
-
     updateTurretRotation();
     turret.updateTelemetry();
   }

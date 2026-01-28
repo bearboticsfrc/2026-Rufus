@@ -111,6 +111,7 @@ public class RobotContainer {
     joystick.b().onTrue(turret.setAngle(zeroDegrees));
     joystick.x().onTrue(turret.setAngle(oneEightyDegrees));
     joystick.y().onTrue(turret.setAngle(twoSeventyDegrees));
+    joystick.rightBumper().whileTrue(turret.setAngle(() -> turret.turretRelativeRotation()));
   }
 
   public Angle ninteyDegrees = Degrees.of(90);
