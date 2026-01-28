@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.vision.Vision;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 import org.photonvision.EstimatedRobotPose;
@@ -63,8 +64,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   /** Notifier for updating pose based on vision measurements. */
   private final Notifier poseEstimationNotifier = new Notifier(this::poseEstimationPeriodic);
 
-  // private final Vision vision = new Vision(Arrays.asList(VisionConstants.FRONT_LEFT_CAMERA));
-  private final Vision vision = new Vision(List.of());
+  @Logged
+  private final Vision vision = new Vision(Arrays.asList(VisionConstants.FRONT_LEFT_CAMERA));
 
   @Logged(name = "PigeonPitch")
   public double getPigeonPitch() {

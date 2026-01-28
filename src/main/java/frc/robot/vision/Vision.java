@@ -108,13 +108,16 @@ public class Vision {
     for (PhotonCamera camera : cameras) {
       Optional<EstimatedRobotPose> visionEstimation = Optional.empty();
       for (PhotonPipelineResult change : camera.getAllUnreadResults()) {
-        if (change.hasTargets() || (isTooAmbiguous(change) || isTooFar(change))) {
-          continue;
-        }
         PhotonPoseEstimator photonPoseEstimator = photonEstimators.get(cameras.indexOf(camera));
         visionEstimation = photonPoseEstimator.estimateCoprocMultiTagPose(change);
         if (visionEstimation.isEmpty()) {
           visionEstimation = photonPoseEstimator.estimateLowestAmbiguityPose(change);
+        }
+        if (visionEstimation.isEmpty()) {
+          continue;
+        }
+        if (isTooAmbiguous(visionEstimation.get()) || isTooFar(visionEstimation.get())) {
+          continue;
         }
 
         updatedTargetPoses(visionEstimation.get().targetsUsed);
@@ -209,8 +212,16 @@ public class Vision {
     return result.getBestTarget().bestCameraToTarget.getMeasureX().gt(CULLING_DISTANCE);
   }
 
+  private boolean isTooFar(EstimatedRobotPose estimate) {
+    return estimate.targetsUsed.get(0).getBestCameraToTarget().getMeasureX().gt(CULLING_DISTANCE);
+  }
+
   private boolean isTooAmbiguous(PhotonPipelineResult result) {
     return result.getBestTarget().poseAmbiguity > CULLING_AMBIGUITY;
+  }
+
+  private boolean isTooAmbiguous(EstimatedRobotPose estimate) {
+    return estimate.targetsUsed.get(0).poseAmbiguity > CULLING_AMBIGUITY;
   }
 
   // ----- Simulation
