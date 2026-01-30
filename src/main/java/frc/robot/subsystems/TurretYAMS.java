@@ -21,6 +21,7 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
@@ -130,6 +131,16 @@ public class TurretYAMS extends SubsystemBase {
   @Logged
   public double getTurretRelativeRotationDegrees() {
     return turretRelativeRotation.in(Degrees);
+  }
+
+  @Logged
+  public Translation2d getTargetPosition() {
+    double distance =  poseSupplier.get().getTranslation().getDistance(blueHub);
+    Transform2d targetTransform = new Transform2d(
+          new Translation2d(distance, 0.0), Rotation2d.k180deg);
+
+    Translation2d targetPos = poseSupplier.get().transformBy(targetTransform).getTranslation();
+    return targetPos;
   }
 
   // turrets rotation relative to robot
