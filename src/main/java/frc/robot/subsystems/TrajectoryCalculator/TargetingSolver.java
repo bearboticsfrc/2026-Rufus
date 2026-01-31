@@ -314,16 +314,6 @@ public class TargetingSolver {
                 double distanceAtSecondHeight = getDistanceAtHeightOccurrence(trajectory, desiredHeightAtTarget, 2);
                 if (distanceAtSecondHeight > 0) {
                     distanceError = Math.abs(distanceAtSecondHeight - targetDistance);
-                    
-                    // Add small penalty if ceiling violated (lowest priority)
-                    // if (ceilingHeight != null) {
-                    //     double maxHeight = trajectory.getMaxHeight();
-                    //     if (maxHeight > ceilingHeight) {
-                    //         // Add ceiling overage as low-weight penalty (100x smaller than distance error)
-                    //         distanceError += (maxHeight - ceilingHeight) * 0.01;
-                    //     }
-                    // }
-                    
                     return distanceError;
                 } else {
                     return Double.MAX_VALUE; // Should not happen
@@ -332,16 +322,6 @@ public class TargetingSolver {
                 return Double.MAX_VALUE; // Height not reached twice
             }
         }
-        
-        // Add small penalty if ceiling violated (lowest priority)
-        // if (ceilingHeight != null) {
-        //     double maxHeight = trajectory.getMaxHeight();
-        //     if (maxHeight > ceilingHeight) {
-        //         // Add ceiling overage as low-weight penalty (100x smaller than distance error)
-        //         distanceError += (maxHeight - ceilingHeight) * 0.01;
-        //     }
-        // }
-        
         return distanceError;
     }
     
@@ -375,31 +355,6 @@ public class TargetingSolver {
         
         return true;
     }
-    
-    /**
-     * Find the height of the projectile at a given horizontal distance.
-     */
-    // private static double getHeightAtDistance(ProjectileTrajectory trajectory, double targetDistance) {
-    //     java.util.List<TrajectoryPoint> points = trajectory.getTrajectory();
-    //    
-    //     if (points.isEmpty()) {
-    //         return 0;
-    //     }
-    //    
-    //     // Find the point closest to target distance
-    //     TrajectoryPoint closest = points.get(0);
-    //     double minDiff = Math.abs(points.get(0).x - targetDistance);
-    //    
-    //     for (TrajectoryPoint point : points) {
-    //         double diff = Math.abs(point.x - targetDistance);
-    //         if (diff < minDiff) {
-    //             minDiff = diff;
-    //             closest = point;
-    //         }
-    //     }
-    //    
-    //     return closest.y;
-    // }
     
     /**
      * Find the distance at which the projectile reaches a specific height for the Nth occurrence.
@@ -493,39 +448,5 @@ public class TargetingSolver {
     private static double getAngle(TargetingSolution solution)
     {
         return solution.angle;
-    }
-
-    /**
-     * Verify the solution by running the trajectory with the found parameters.
-     */
-    private static void verifySolution(double height, double targetDistance, TargetingSolution solution) {
-        System.out.println("========================================");
-        System.out.println("       VERIFICATION RESULTS");
-        System.out.println("========================================");
-        System.out.println();
-        
-        ProjectileTrajectory trajectory = ProjectileTrajectory.createSphere(
-            height, solution.velocity, solution.angle, SPHERE_DIAMETER_INCHES, SPHERE_MASS_LBS
-        );
-        trajectory.calculateTrajectory();
-        
-        System.out.println("Input Parameters:");
-        System.out.println("  Launch Velocity: " + String.format("%.2f", solution.velocity) + " ft/s");
-        System.out.println("  Launch Angle: " + String.format("%.2f", solution.angle) + "°");
-        System.out.println("  Initial Height: " + String.format("%.2f", height) + " ft");
-        System.out.println("  Target Distance: " + String.format("%.2f", targetDistance) + " ft");
-        System.out.println();
-        System.out.println("Calculated Results:");
-        System.out.println("  Maximum Height: " + String.format("%.2f", trajectory.getMaxHeight()) + " ft");
-        System.out.println("  Time to Max Height: " + String.format("%.3f", trajectory.getMaxHeightTime()) + " s");
-        System.out.println("  Range: " + String.format("%.2f", trajectory.getRange()) + " ft");
-        System.out.println("  Flight Time: " + String.format("%.3f", trajectory.getImpactTime()) + " s");
-        System.out.println("  Impact Speed: " + String.format("%.2f", trajectory.getImpactSpeed()) + " ft/s");
-        System.out.println();
-        
-        // Show hit count for desired height if applicable
-        if (solution.heightConstrained) {
-            getHeightHitInfo(trajectory);
-        }
     }
 }
