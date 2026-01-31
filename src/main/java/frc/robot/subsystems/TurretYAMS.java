@@ -27,6 +27,8 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.subsystems.TrajectoryCalculator.TargetingSolver;
+
 import java.util.function.Supplier;
 import yams.gearing.GearBox;
 import yams.gearing.MechanismGearing;
@@ -106,14 +108,14 @@ public class TurretYAMS extends SubsystemBase {
   @Logged Rotation2d turretRotation;
   @Logged Angle turretRelativeRotation;
 
-  public Translation2d gethub() {
+  public Translation2d getHub() {
     return FlippingUtil.flipFieldPosition(blueHub);
   }
 
   // constantly gets the angle from the robot to the hub (turret rotation relative to hub)
   public void updateTurretRotation() {
     robotRotation = poseSupplier.get().getRotation();
-    turretRotation = ((gethub().minus(poseSupplier.get().getTranslation())).getAngle());
+    turretRotation = ((getHub().minus(poseSupplier.get().getTranslation())).getAngle());
     turretRelativeRotation = Degrees.of(robotRotation.minus(turretRotation).getDegrees());
   }
 
@@ -131,6 +133,14 @@ public class TurretYAMS extends SubsystemBase {
   public double getTurretRelativeRotationDegrees() {
     return turretRelativeRotation.in(Degrees);
   }
+
+  @Logged
+  public double getHubDistance()
+  {
+    return ((poseSupplier.get().getTranslation()).getDistance(getHub()));
+  }
+  
+
 
   // turrets rotation relative to robot
   public Angle turretRelativeRotation() {
@@ -239,5 +249,11 @@ public class TurretYAMS extends SubsystemBase {
 
   public Command sysIdDynamic(SysIdRoutine.Direction direction) {
     return m_sysIdRoutine.dynamic(direction);
+  }
+
+  //trajectory, gets time, velocity, and angle of launch
+  public double[] getTrajectorySolutions()
+  {
+    return TargetingSolver.solveTrajectory(getHubDistance());
   }
 }
