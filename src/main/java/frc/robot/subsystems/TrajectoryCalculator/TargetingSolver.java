@@ -1,10 +1,5 @@
 package frc.robot.subsystems.TrajectoryCalculator;
 
-// import java.util.Scanner;
-import edu.wpi.first.math.geometry.Pose2d;
-import frc.robot.subsystems.Turret;
-
-import java.util.function.Supplier;
 
 /**
  * Trajectory targeting solver.
