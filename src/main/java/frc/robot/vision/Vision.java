@@ -105,13 +105,19 @@ public class Vision {
 
     List<EstimatedRobotPose> visionEstimates = new ArrayList<>();
 
+    int i = 0;
     for (PhotonCamera camera : cameras) {
       Optional<EstimatedRobotPose> visionEstimation = Optional.empty();
-      for (PhotonPipelineResult change : camera.getAllUnreadResults()) {
+      List<PhotonPipelineResult> changes = camera.getAllUnreadResults();
+
+      for (PhotonPipelineResult change : changes) {
+        // System.out.println(" Processing change for timestamp " + change.getTimestampSeconds());
+        i++;
         PhotonPoseEstimator photonPoseEstimator = photonEstimators.get(cameras.indexOf(camera));
         visionEstimation = photonPoseEstimator.estimateCoprocMultiTagPose(change);
+        // visionEstimation = Optional.empty();
         if (visionEstimation.isEmpty()) {
-          visionEstimation = photonPoseEstimator.estimateLowestAmbiguityPose(change);
+          //   visionEstimation = photonPoseEstimator.estimateLowestAmbiguityPose(change);
         }
         if (visionEstimation.isEmpty()) {
           continue;
@@ -119,6 +125,20 @@ public class Vision {
         if (isTooAmbiguous(visionEstimation.get()) || isTooFar(visionEstimation.get())) {
           continue;
         }
+
+        // for (int r = -90; r < 90; r++) {
+        //   Transform3d transform =
+        //       new Transform3d(
+        //           new Translation3d(-.272, 0.172, 0.711),
+        //           new Rotation3d(Degrees.zero(), Degrees.of(r), Degrees.zero()));
+        //   photonPoseEstimator.setRobotToCameraTransform(transform);
+        //   visionEstimation = photonPoseEstimator.estimateLowestAmbiguityPose(change);
+        //   double angle =
+        //       visionEstimation.get().estimatedPose.getRotation().toRotation2d().getDegrees();
+        //   System.out.println(
+        //       "rot " + r + " angle " + angle + " x:" +
+        // visionEstimation.get().estimatedPose.getX());
+        // }
 
         updatedTargetPoses(visionEstimation.get().targetsUsed);
 
@@ -135,14 +155,16 @@ public class Vision {
         }
 
         visionEstimation.ifPresent(visionEstimates::add);
-        // updateEstimationStdDevs(photonPoseEstimator, visionEstimation, change.getTargets());
-        curStdDevs = SINGLE_TAG_STD_DEVS; // TODO: change to dynamic estimation
+        updateEstimationStdDevs(photonPoseEstimator, visionEstimation, change.getTargets());
+        // curStdDevs = SINGLE_TAG_STD_DEVS; // TODO: change to dynamic estimation
 
         if (visionEstimation.isPresent()) {
           latestCameraPose.put(camera.getName(), visionEstimation.get().estimatedPose.toPose2d());
         }
       }
     }
+
+    // System.out.println("Target list size = " + targetPoses.size() + " iterations = " + i);
 
     return visionEstimates;
   }

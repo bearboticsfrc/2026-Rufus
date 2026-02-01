@@ -135,9 +135,9 @@ public class TurretYAMS extends SubsystemBase {
 
   @Logged
   public Translation2d getTargetPosition() {
-    double distance =  poseSupplier.get().getTranslation().getDistance(blueHub);
-    Transform2d targetTransform = new Transform2d(
-          new Translation2d(distance, 0.0), Rotation2d.k180deg);
+    double distance = poseSupplier.get().getTranslation().getDistance(blueHub);
+    Transform2d targetTransform =
+        new Transform2d(new Translation2d(distance, 0.0), Rotation2d.k180deg);
 
     Translation2d targetPos = poseSupplier.get().transformBy(targetTransform).getTranslation();
     return targetPos;
