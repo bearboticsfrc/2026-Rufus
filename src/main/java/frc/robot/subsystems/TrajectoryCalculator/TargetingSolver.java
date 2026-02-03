@@ -18,7 +18,7 @@ public class TargetingSolver {
     private static final double DEFAULT_MAX_ANGLE = 80;         // degrees
     
     private static final double ACCEPTABLE_ERROR = 0.25;   // feet - convergence threshold
-    private static final int MAX_ITERATIONS = 10000;      // maximum iterations for optimization
+    private static final int MAX_ITERATIONS = 1000;      // maximum iterations for optimization
     
     /**
      * Represents a targeting solution.
@@ -57,17 +57,17 @@ public class TargetingSolver {
     
     public static double[] solveHubTrajectory(double distance)
     {
-        return solveTrajectory(distance, 6, -0.5/* potentially an issue that needs to be made positive instead of negative */, 2.5, 0.5);
+        return solveTrajectory(distance, 6, -0.5/* potentially an issue that needs to be made positive instead of negative */, 2.5, 0.5, true);
     }
 
     public static double[] solveGroundTrajectory(double distance)
     {
-        return solveTrajectory(distance, 0, -0.5/* potentially an issue that needs to be made positive instead of negative */, -0.5, -0.5);
+        return solveTrajectory(distance, 0, -0.5/* potentially an issue that needs to be made positive instead of negative */, -0.5, -0.5, false);
     }
 
 
     public static double[] solveTrajectory(double hubDistance, double heightAtTarget, Double rangeStartI, 
-                                                    Double rangeEndI, double rangeHeightI) {
+                                                    Double rangeEndI, double rangeHeightI, boolean airResistance) {
         double[] timeVelocityAngle = new double[3];
 
         double height = DEFAULT_INITIAL_HEIGHT;
@@ -82,9 +82,8 @@ public class TargetingSolver {
         double rangeHeight = desiredHeightAtTarget + rangeHeightI;
         String rangeDirection = "above";
 
-        // Air resistance option (interactive prompt kept but default true)
-        System.out.print("Include air resistance? (y/n) [default: y]: ");
-        boolean airResistanceEnabled = true;
+        // Air resistance option 
+        boolean airResistanceEnabled = airResistance;
 
         // Get angle limits
         double minAngle = DEFAULT_MIN_ANGLE;

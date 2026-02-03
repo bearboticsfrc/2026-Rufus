@@ -104,12 +104,23 @@ public class TurretYAMS extends SubsystemBase {
   }
 
   Translation2d blueHub = new Translation2d(4.63, 4.03);
+  Translation2d blueOutpost = new Translation2d(0.43, 0.3);
+  Translation2d blueDepot = new Translation2d(0.43, 7.5);
+
   @Logged Rotation2d robotRotation;
   @Logged Rotation2d turretRotation;
   @Logged Angle turretRelativeRotation;
 
   public Translation2d getHub() {
     return FlippingUtil.flipFieldPosition(blueHub);
+  }
+
+  public Translation2d getOutpost() {
+    return FlippingUtil.flipFieldPosition(blueOutpost);
+  }
+
+  public Translation2d getDepot() {
+    return FlippingUtil.flipFieldPosition(blueDepot);
   }
 
   // constantly gets the angle from the robot to the hub (turret rotation relative to hub)
@@ -139,7 +150,16 @@ public class TurretYAMS extends SubsystemBase {
   {
     return ((poseSupplier.get().getTranslation()).getDistance(getHub()));
   }
-  
+  @Logged
+  public double getOutpostDistance()
+  {
+    return ((poseSupplier.get().getTranslation()).getDistance(getOutpost()));
+  }
+  @Logged
+  public double getDepotDistance()
+  {
+    return ((poseSupplier.get().getTranslation()).getDistance(getDepot()));
+  }
 
 
   // turrets rotation relative to robot
@@ -255,11 +275,14 @@ public class TurretYAMS extends SubsystemBase {
   //Hood will need to be perpindicular to the returned angle
   public double[] getHubTrajectorySolutions()
   {
-    return TargetingSolver.solveHubTrajectory(getHubDistance());
+    return TargetingSolver.solveHubTrajectory(getHubDistance() * 3.28);
   }
-
-  public double[] getGroundTrajectorySolutions()
+  public double[] getDepotTrajectorySolutions()
   {
-    return TargetingSolver.solveGroundTrajectory(getTargetDistance());
+    return TargetingSolver.solveGroundTrajectory(getDepotDistance() * 3.28);
+  }
+  public double[] getOutpostTrajectorySolutions()
+  {
+    return TargetingSolver.solveGroundTrajectory(getOutpostDistance() * 3.28);
   }
 }
