@@ -27,7 +27,7 @@ public class TargetingSolver {
         double velocity;
         double angle;
         double achievedDistance;
-        double achievedHeight;  // height at target distance (if constrained)
+        double achievedHeight;  /* height at target distance (if constrained) */
         double distanceError;
         double heightError;
         double totalError;
@@ -55,20 +55,32 @@ public class TargetingSolver {
         }
     }
     
-    public static double[] solveTrajectory(double hubDistance) {
+    public static double[] solveHubTrajectory(double distance)
+    {
+        return solveTrajectory(distance, 6, -0.5/* potentially an issue that needs to be made positive instead of negative */, 2.5, 0.5);
+    }
+
+    public static double[] solveGroundTrajectory(double distance)
+    {
+        return solveTrajectory(distance, 0, -0.5/* potentially an issue that needs to be made positive instead of negative */, -0.5, -0.5);
+    }
+
+
+    public static double[] solveTrajectory(double hubDistance, double heightAtTarget, Double rangeStartI, 
+                                                    Double rangeEndI, double rangeHeightI) {
         double[] timeVelocityAngle = new double[3];
 
         double height = DEFAULT_INITIAL_HEIGHT;
         double targetDistance = hubDistance;
 
-        // Get optional desired height at target distance
-        Double desiredHeightAtTarget = 6.0;
+        // Get optional desired height at target distance(feet)
+        Double desiredHeightAtTarget = heightAtTarget;
 
         // Automatic range constraint: 0.5 to 2.5 feet around target distance, must be above desired height + 0.5 feet
-        Double rangeStart = targetDistance - 0.5;
-        Double rangeEnd = targetDistance + 2.5;
+        Double rangeStart = targetDistance + rangeStartI;
+        Double rangeEnd = targetDistance + rangeEndI;
+        double rangeHeight = desiredHeightAtTarget + rangeHeightI;
         String rangeDirection = "above";
-        double rangeHeight = desiredHeightAtTarget + 0.5;
 
         // Air resistance option (interactive prompt kept but default true)
         System.out.print("Include air resistance? (y/n) [default: y]: ");

@@ -251,9 +251,15 @@ public class TurretYAMS extends SubsystemBase {
     return m_sysIdRoutine.dynamic(direction);
   }
 
-  //trajectory, gets time, velocity, and angle of launch
-  public double[] getTrajectorySolutions()
+  //trajectory, gets time, velocity, and angle of launch, will need to correct angle variance
+  //Hood will need to be perpindicular to the returned angle
+  public double[] getHubTrajectorySolutions()
   {
-    return TargetingSolver.solveTrajectory(getHubDistance());
+    return TargetingSolver.solveHubTrajectory(getHubDistance());
+  }
+
+  public double[] getGroundTrajectorySolutions()
+  {
+    return TargetingSolver.solveGroundTrajectory(getTargetDistance());
   }
 }
