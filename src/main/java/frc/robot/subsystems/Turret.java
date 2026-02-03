@@ -35,6 +35,8 @@ public class Turret extends Mechanism {
       configNeutralBrakeMode(true);
       configCounterClockwise_Positive();
       setAttached(true);
+      // configForwardSoftLimit(170, true);
+      // configReverseSoftLimit(-170, true);
     }
   }
 

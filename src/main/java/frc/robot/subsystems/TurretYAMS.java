@@ -47,12 +47,22 @@ public class TurretYAMS extends SubsystemBase {
 
   private final CANcoder turretCANcoderMain = new CANcoder(31, canbus); // 10 tooth
   private final CANcoder turretCANcoderAux = new CANcoder(32, canbus); // 11 tooth
+  public static double minRotations = -.45;
+  public static double maxRotations = .45;
+
+  public double getMinRotations() {
+    return minRotations;
+  }
+
+  public double getMaxRotations() {
+    return maxRotations;
+  }
 
   private final SmartMotorControllerConfig motorConfig =
       new SmartMotorControllerConfig(this)
           .withControlMode(ControlMode.CLOSED_LOOP)
           .withClosedLoopController(
-              23.221, 0, .8981, RotationsPerSecond.of(20), RotationsPerSecondPerSecond.of(10))
+              25, 0, .8981, RotationsPerSecond.of(20), RotationsPerSecondPerSecond.of(10))
           .withFeedforward(new SimpleMotorFeedforward(.38778, 2.3767, .077265))
           // Configure Motor and Mechanism properties
           .withGearing(new MechanismGearing(GearBox.fromReductionStages(23.25))) // 12-30-10-93
@@ -63,6 +73,7 @@ public class TurretYAMS extends SubsystemBase {
           // Power Optimization
           .withStatorCurrentLimit(Amps.of(40))
           .withClosedLoopRampRate(Seconds.of(0.25))
+          .withSoftLimit(Rotations.of(getMinRotations()), Rotations.of(getMaxRotations()))
           .withOpenLoopRampRate(Seconds.of(0.25));
   private final SmartMotorController turretSMC =
       new TalonFXWrapper(turretMotor, DCMotor.getKrakenX44Foc(1), motorConfig);
@@ -70,11 +81,9 @@ public class TurretYAMS extends SubsystemBase {
   private final PivotConfig turretConfig =
       new PivotConfig(turretSMC)
           .withStartingPosition(Degrees.of(0)) // Starting position of the Pivot
-          .withWrapping(
-              Rotations.of(-.5), Rotations.of(.5)) // Wrapping enabled bc the pivot can spin
-          // infinitely
           .withHardLimit(Degrees.of(-90), Degrees.of(90)) // Hard limit bc wiring prevents infinite
           // spinning
+          .withSoftLimits(Rotations.of(getMinRotations()), Rotations.of(getMaxRotations()))
           .withTelemetry("TurretMech", TelemetryVerbosity.HIGH) // Telemetry
           .withMOI(Meters.of(0.25), Pounds.of(4)); // MOI Calculation
 
@@ -102,24 +111,29 @@ public class TurretYAMS extends SubsystemBase {
   }
 
   Translation2d blueHub = new Translation2d(4.63, 4.03);
-  @Logged Rotation2d robotRotation;
-  @Logged Rotation2d turretRotation;
+  Rotation2d robotRotation;
+  Rotation2d rotationToHub;
   @Logged Angle turretRelativeRotation;
 
-  public Translation2d gethub() {
+  public Translation2d getHub() {
     return FlippingUtil.flipFieldPosition(blueHub);
   }
 
   // constantly gets the angle from the robot to the hub (turret rotation relative to hub)
   public void updateTurretRotation() {
     robotRotation = poseSupplier.get().getRotation();
-    turretRotation = ((gethub().minus(poseSupplier.get().getTranslation())).getAngle());
-    turretRelativeRotation = Degrees.of(robotRotation.minus(turretRotation).getDegrees());
+    rotationToHub = ((getHub().minus(poseSupplier.get().getTranslation())).getAngle());
+    turretRelativeRotation = Degrees.of(robotRotation.minus(rotationToHub).getDegrees());
+    turretRelativeRotation =
+        (turretRelativeRotation.gt(Degrees.of(180))
+            ? turretRelativeRotation.minus(Degrees.of(180))
+            : turretRelativeRotation);
   }
 
+  // gets the distance to the hub
   @Logged
-  public double getTurretRotationDegrees() {
-    return turretRotation.getDegrees();
+  public double getHubDistance() {
+    return ((poseSupplier.get().getTranslation()).getDistance(getHub()));
   }
 
   @Logged
@@ -137,13 +151,6 @@ public class TurretYAMS extends SubsystemBase {
     return turretRelativeRotation;
   }
 
-  // creates a new Pose2d that rotates around the hub
-  @Logged
-  public Pose2d getTurretPose() {
-    return new Pose2d(poseSupplier.get().getTranslation(), turretRotation);
-  }
-
-  @Logged
   public double getAbsoluteAngle() {
     return absoluteEncoder.getAngleOptional().orElse(Degrees.of(-1)).in(Degrees);
   }
@@ -174,8 +181,33 @@ public class TurretYAMS extends SubsystemBase {
     return turretCANcoderAux.getAbsolutePosition().getValue().in(Degrees);
   }
 
+  private double wrapDegreesToSoftLimits(double targetDegrees) {
+
+    double minDeg = getMinRotations() * 360.0;
+    double maxDeg = getMaxRotations() * 360.0;
+    double currentDeg = getAngle().in(Degrees);
+
+    // Solve for integer n such that minDeg <= targetDegrees + 360*n <= maxDeg
+    int nMin = (int) Math.ceil((minDeg - targetDegrees) / 360.0);
+    int nMax = (int) Math.floor((maxDeg - targetDegrees) / 360.0);
+
+    if (nMin <= nMax) {
+      // At least one equivalent fits in soft limits.
+      int nClosest = (int) Math.round((currentDeg - targetDegrees) / 360.0);
+      int n =
+          Math.max(nMin, Math.min(nClosest, nMax)); // clamp the closest candidate to allowed range
+      return targetDegrees + n * 360.0;
+    } else {
+      // No equivalent fits in soft limits -> clamp to nearest soft limit endpoint.
+      double toMin = Math.abs(currentDeg - minDeg);
+      double toMax = Math.abs(currentDeg - maxDeg);
+      return (toMin < toMax) ? minDeg : maxDeg;
+    }
+  }
+
   public Command setAngle(Angle angle) {
-    return turret.setAngle(angle);
+    double angleDegrees = wrapDegreesToSoftLimits(angle.in(Degrees));
+    return turret.setAngle(Degrees.of(angleDegrees));
   }
 
   public void setAngleDirect(Angle angle) {

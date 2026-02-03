@@ -15,18 +15,23 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.TurretYAMS;
+import java.util.function.Supplier;
 
 @Logged
 public class RobotContainer {
@@ -35,6 +40,12 @@ public class RobotContainer {
   private double MaxAngularRate =
       RotationsPerSecond.of(0.75)
           .in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+
+  public Translation2d blueHub = new Translation2d(4.63, 4.03);
+
+  public Translation2d getHub() {
+    return FlippingUtil.flipFieldPosition(blueHub);
+  }
 
   private static final double kSimLoopPeriod = 0.004; // 4 ms
   private Notifier simNotifier = null;
@@ -45,8 +56,10 @@ public class RobotContainer {
       new SwerveRequest.FieldCentric()
           .withDeadband(MaxSpeed * 0.1)
           .withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
-          .withDriveRequestType(
-              DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+          .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
+  private final SwerveRequest.FieldCentricFacingAngle findHub =
+      new SwerveRequest.FieldCentricFacingAngle();
 
   private final Telemetry logger = new Telemetry(MaxSpeed);
 
@@ -55,6 +68,8 @@ public class RobotContainer {
   public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
   public final TurretYAMS turret = new TurretYAMS(() -> drivetrain.getPose());
+
+  public static Supplier<Pose2d> poseSupplier;
 
   /* Path follower */
   private final SendableChooser<Command> autoChooser;
@@ -70,6 +85,8 @@ public class RobotContainer {
     Pose2d startingPose =
         FlippingUtil.flipFieldPose(((PathPlannerAuto) autoChooser.getSelected()).getStartingPose());
     drivetrain.resetPose(startingPose);
+
+    // this.poseSupplier = poseSupplier;
   }
 
   private void configureBindings() {
@@ -102,6 +119,9 @@ public class RobotContainer {
     // joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
     // joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
+    // trigger when robot on bump
+    Trigger onBump = new Trigger(drivetrain::isOnBump);
+
     // reset the field-centric heading on left bumper press
     joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
@@ -110,14 +130,34 @@ public class RobotContainer {
     joystick.a().onTrue(turret.setAngle(ninteyDegrees));
     joystick.b().onTrue(turret.setAngle(zeroDegrees));
     joystick.x().onTrue(turret.setAngle(oneEightyDegrees));
-    joystick.y().onTrue(turret.setAngle(twoSeventyDegrees));
+    joystick.y().onTrue(turret.setAngle(negativeNinetyDegrees));
     joystick.rightBumper().whileTrue(turret.setAngle(() -> turret.turretRelativeRotation()));
+
+    // changes to hub-rotation swerve request
+    joystick
+        .rightTrigger()
+        .toggleOnTrue(
+            drivetrain.applyRequest(
+                () ->
+                    findHub
+                        .withVelocityX(
+                            -joystick.getLeftY()
+                                * MaxSpeed) // Drive forward with negative Y (forward)
+                        .withVelocityY(
+                            -joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)));
+                        .withTargetDirection(
+                            ((getHub().minus(poseSupplier.get().getTranslation())).getAngle()))));
+
+    // rumble when on bump
+    onBump.whileTrue(
+        new StartEndCommand(
+            () -> joystick.setRumble(GenericHID.RumbleType.kBothRumble, 1.0),
+            () -> joystick.setRumble(GenericHID.RumbleType.kBothRumble, 0.0)));
   }
 
   public Angle ninteyDegrees = Degrees.of(90);
   public Angle oneEightyDegrees = Degrees.of(180);
-  public Angle twoSeventyDegrees = Degrees.of(270);
-
+  public Angle negativeNinetyDegrees = Degrees.of(-90);
   public Angle zeroDegrees = Degrees.of(0);
   public Angle turretIncrementAngle = Degrees.of(5);
 
