@@ -58,8 +58,12 @@ public class RobotContainer {
           .withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
           .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
+  // Swerve request around the hub
   private final SwerveRequest.FieldCentricFacingAngle findHub =
-      new SwerveRequest.FieldCentricFacingAngle();
+      new SwerveRequest.FieldCentricFacingAngle()
+          .withDeadband(MaxSpeed * 0.1)
+          .withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+          .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
   private final Telemetry logger = new Telemetry(MaxSpeed);
 
@@ -69,7 +73,7 @@ public class RobotContainer {
 
   public final TurretYAMS turret = new TurretYAMS(() -> drivetrain.getPose());
 
-  public static Supplier<Pose2d> poseSupplier;
+  private final Supplier<Pose2d> poseSupplier = () -> drivetrain.getPose();
 
   /* Path follower */
   private final SendableChooser<Command> autoChooser;
@@ -85,8 +89,6 @@ public class RobotContainer {
     Pose2d startingPose =
         FlippingUtil.flipFieldPose(((PathPlannerAuto) autoChooser.getSelected()).getStartingPose());
     drivetrain.resetPose(startingPose);
-
-    // this.poseSupplier = poseSupplier;
   }
 
   private void configureBindings() {
@@ -131,7 +133,7 @@ public class RobotContainer {
     joystick.b().onTrue(turret.setAngle(zeroDegrees));
     joystick.x().onTrue(turret.setAngle(oneEightyDegrees));
     joystick.y().onTrue(turret.setAngle(negativeNinetyDegrees));
-    joystick.rightBumper().whileTrue(turret.setAngle(() -> turret.turretRelativeRotation()));
+    joystick.rightBumper().toggleOnTrue(turret.setAngle(() -> turret.turretRelativeRotation()));
 
     // changes to hub-rotation swerve request
     joystick
