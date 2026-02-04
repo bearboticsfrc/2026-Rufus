@@ -15,7 +15,6 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -27,6 +26,8 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.field.AllianceFlipUtil;
+import frc.robot.field.Field;
 import java.util.function.Supplier;
 import yams.gearing.GearBox;
 import yams.gearing.MechanismGearing;
@@ -87,13 +88,13 @@ public class TurretYAMS extends SubsystemBase {
   @Logged Angle turretRelativeRotation;
 
   public Translation2d gethub() {
-    return FlippingUtil.flipFieldPosition(blueHub);
+    return AllianceFlipUtil.apply(blueHub);
   }
 
   // constantly gets the angle from the robot to the hub (turret rotation relative to hub)
   public void updateTurretRotation() {
     robotRotation = poseSupplier.get().getRotation();
-    turretRotation = ((gethub().minus(poseSupplier.get().getTranslation())).getAngle());
+    turretRotation = ((Field.getMyHub().minus(poseSupplier.get().getTranslation())).getAngle());
     turretRelativeRotation = Degrees.of(robotRotation.minus(turretRotation).getDegrees());
   }
 
@@ -114,8 +115,7 @@ public class TurretYAMS extends SubsystemBase {
 
   @Logged
   public Translation2d getTargetPosition() {
-    double distance =
-        poseSupplier.get().getTranslation().getDistance(FlippingUtil.flipFieldPosition(blueHub));
+    double distance = poseSupplier.get().getTranslation().getDistance(Field.getMyHub());
     Transform2d targetTransform =
         new Transform2d(new Translation2d(distance, 0.0), Rotation2d.k180deg);
 

@@ -6,41 +6,47 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import bearlib.fms.AllianceColor;
+import bearlib.fms.AllianceReadyListener;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathPlannerAuto;
-import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import frc.robot.field.AllianceFlipUtil;
+import frc.robot.field.Field;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.TurretController;
 import frc.robot.subsystems.TurretYAMS;
 
 @Logged
-public class RobotContainer {
+public class RobotContainer implements AllianceReadyListener {
   private double MaxSpeed =
       TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
   private double MaxAngularRate =
       RotationsPerSecond.of(0.75)
           .in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
-  private static final double kSimLoopPeriod = 0.004; // 4 ms
-  private Notifier simNotifier = null;
-  private double lastSimTime;
-
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final SwerveRequest.FieldCentric drive =
       new SwerveRequest.FieldCentric()
+          .withDeadband(MaxSpeed * 0.1)
+          .withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+          .withDriveRequestType(
+              DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+
+  private final SwerveRequest.FieldCentricFacingAngle driveFacingAngle =
+      new SwerveRequest.FieldCentricFacingAngle()
           .withDeadband(MaxSpeed * 0.1)
           .withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
           .withDriveRequestType(
@@ -67,10 +73,7 @@ public class RobotContainer {
     configureBindings();
     // Warmup PathPlanner to avoid Java pauses
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
-
-    Pose2d startingPose =
-        FlippingUtil.flipFieldPose(((PathPlannerAuto) autoChooser.getSelected()).getStartingPose());
-    drivetrain.resetPose(startingPose);
+    AllianceColor.addListener(this);
   }
 
   private void configureBindings() {
@@ -108,6 +111,7 @@ public class RobotContainer {
 
     drivetrain.registerTelemetry(logger::telemeterize);
     addTurretTestBindings();
+    bindPointToHubTrigger();
   }
 
   private void addTurretTestBindings() {
@@ -118,10 +122,39 @@ public class RobotContainer {
     joystick.rightBumper().whileTrue(turret.setAngle(() -> turret.turretRelativeRotation()));
   }
 
+  public void bindPointToHubTrigger() {
+    joystick
+        .leftTrigger()
+        .whileTrue(
+            drivetrain.applyRequest(
+                () ->
+                    driveFacingAngle
+                        .withVelocityX(-joystick.getLeftY() * MaxSpeed)
+                        .withVelocityY(-joystick.getLeftX() * MaxSpeed)
+                        .withHeadingPID(18, 0, .1)
+                        .withTargetDirection(getAngleToHub())));
+  }
+
+  public Rotation2d getAngleToHub() {
+    return AllianceFlipUtil.apply(
+        (Field.getMyHub().minus(drivetrain.getPose().getTranslation())).getAngle());
+  }
+
   public Command getAutonomousCommand() {
     /* Run the path selected from the auto chooser */
     return autoChooser.getSelected();
   }
 
   public void simulationPeriodic() {}
+
+  private boolean initialPoseSet = false;
+
+  @Override
+  public void updateAlliance(Alliance alliance) {
+    if (!initialPoseSet) {
+      drivetrain.resetPose(
+          AllianceFlipUtil.apply(((PathPlannerAuto) autoChooser.getSelected()).getStartingPose()));
+      initialPoseSet = true;
+    }
+  }
 }
