@@ -22,6 +22,10 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -99,6 +103,29 @@ public class TurretYAMS extends SubsystemBase {
 
   private final Supplier<Pose2d> poseSupplier;
 
+
+  /**
+   * Predicts the robot's pose after a given time interval for ANY drivetrain.
+   *
+   * @param currentPose Current robot pose (from odometry)
+   * @param chassisSpeeds Current chassis speeds (vx, vy in m/s, omega in rad/s)
+   * @param deltaTimeSeconds Time into the future to predict
+   * @return Predicted future pose
+   */
+  public static Pose2d predictFuturePose(Pose2d currentPose, ChassisSpeeds chassisSpeeds, double deltaTimeSeconds) 
+  {
+    // Calculate change in position over deltaTime
+    double dx = chassisSpeeds.vxMetersPerSecond * deltaTimeSeconds;
+    double dy = chassisSpeeds.vyMetersPerSecond * deltaTimeSeconds;
+    double dTheta = chassisSpeeds.omegaRadiansPerSecond * deltaTimeSeconds;
+
+    // Create a transform representing the movement
+    Transform2d transform = new Transform2d(dx, dy, new Rotation2d(dTheta));
+
+    // Apply transform to current pose
+    return currentPose.plus(transform);
+  }
+
   public TurretYAMS(Supplier<Pose2d> poseSupplier) {
     this.poseSupplier = poseSupplier;
   }
@@ -135,6 +162,8 @@ public class TurretYAMS extends SubsystemBase {
     return turretRotation.getDegrees();
   }
 
+
+
   @Logged
   public double getRobotRotationDegrees() {
     return robotRotation.getDegrees();
@@ -159,6 +188,19 @@ public class TurretYAMS extends SubsystemBase {
   public double getDepotDistance()
   {
     return ((poseSupplier.get().getTranslation()).getDistance(getDepot()));
+  }
+
+  public double getHubDistance(Pose2d location)
+  {
+    return ((location.getTranslation()).getDistance(getHub()));
+  }
+  public double getOutpostDistance(Pose2d location)
+  {
+    return ((location.getTranslation()).getDistance(getOutpost()));
+  }
+  public double getDepotDistance(Pose2d location)
+  {
+    return ((location.getTranslation()).getDistance(getDepot()));
   }
 
 
@@ -284,5 +326,52 @@ public class TurretYAMS extends SubsystemBase {
   public double[] getOutpostTrajectorySolutions()
   {
     return TargetingSolver.solveGroundTrajectory(getOutpostDistance() * 3.28);
+  }
+
+  public double[] getHubTrajectorySolutions(Pose2d robotPose)
+  {
+    return TargetingSolver.solveHubTrajectory(getHubDistance() * 3.28);
+  }
+  public double[] getDepotTrajectorySolutions(Pose2d robotPose)
+  {
+    return TargetingSolver.solveGroundTrajectory(getDepotDistance() * 3.28);
+  }
+  public double[] getOutpostTrajectorySolutions(Pose2d robotPose)
+  {
+    return TargetingSolver.solveGroundTrajectory(getOutpostDistance() * 3.28);
+  }
+
+
+
+  public double[] ShootOnMoveSolver(Pose2d roboPose2d, ChassisSpeeds chassisSpeeds, String targetLocation)
+  {
+    double[] trajectorySolution1;
+    if (targetLocation.equals("Outpost"))
+    {
+      trajectorySolution1 = getOutpostTrajectorySolutions();
+    }
+    else if (targetLocation.equals("Depot"))
+    {
+      trajectorySolution1 = getDepotTrajectorySolutions();
+    }
+    else
+    {
+      trajectorySolution1 = getHubTrajectorySolutions();
+    }
+    predictFuturePose(roboPose2d, chassisSpeeds, trajectorySolution1[0]);
+    double trajectorySolution2[];
+    if (targetLocation.equals("Outpost"))
+    {
+      trajectorySolution2 = getOutpostTrajectorySolutions();
+    }
+    else if (targetLocation.equals("Depot"))
+    {
+      trajectorySolution2 = getDepotTrajectorySolutions();
+    }
+    else
+    {
+      trajectorySolution2 = getHubTrajectorySolutions();
+    }    
+    return trajectorySolution2;
   }
 }

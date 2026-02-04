@@ -15,6 +15,8 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -240,6 +242,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       addVisionMeasurement(estimatedPose, VisionConstants.SINGLE_TAG_STD_DEVS);
     }
   }
+
+  // SwerveModuleState frontLeftState = new SwerveModuleState(flSpeed, flAngle);
+  // SwerveModuleState frontRightState = new SwerveModuleState(frSpeed, frAngle);
+  // SwerveModuleState backLeftState = new SwerveModuleState(blSpeed, blAngle);
+  // SwerveModuleState backRightState = new SwerveModuleState(brSpeed, brAngle);
+
+  // // Convert module states to chassis speeds
+  // ChassisSpeeds chassisSpeeds = swerveKinematics.toChassisSpeeds(
+  //     frontLeftState, frontRightState, backLeftState, backRightState
+  // );
 
   /**
    * Adds vision-based pose estimation measurements to the drivetrain.
