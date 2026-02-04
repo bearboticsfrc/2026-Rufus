@@ -6,7 +6,6 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -15,9 +14,7 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -26,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.TurretController;
 import frc.robot.subsystems.TurretYAMS;
 
 @Logged
@@ -55,6 +53,9 @@ public class RobotContainer {
   public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
   public final TurretYAMS turret = new TurretYAMS(() -> drivetrain.getPose());
+
+  public final TurretController turretController =
+      new TurretController(() -> drivetrain.getPose(), value -> turret.setAngle(value));
 
   /* Path follower */
   private final SendableChooser<Command> autoChooser;
@@ -106,45 +107,21 @@ public class RobotContainer {
     joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
     drivetrain.registerTelemetry(logger::telemeterize);
-
-    joystick.a().onTrue(turret.setAngle(ninteyDegrees));
-    joystick.b().onTrue(turret.setAngle(zeroDegrees));
-    joystick.x().onTrue(turret.setAngle(oneEightyDegrees));
-    joystick.y().onTrue(turret.setAngle(twoSeventyDegrees));
-    joystick.rightBumper().whileTrue(turret.setAngle(() -> turret.turretRelativeRotation()));
+    addTurretTestBindings();
   }
 
-  public Angle ninteyDegrees = Degrees.of(90);
-  public Angle oneEightyDegrees = Degrees.of(180);
-  public Angle twoSeventyDegrees = Degrees.of(270);
-
-  public Angle zeroDegrees = Degrees.of(0);
-  public Angle turretIncrementAngle = Degrees.of(5);
+  private void addTurretTestBindings() {
+    joystick.a().onTrue(turret.setAngle(Degrees.of(180)));
+    joystick.b().onTrue(turret.setAngle(Degrees.of(-90)));
+    joystick.x().onTrue(turret.setAngle(Degrees.of(90)));
+    joystick.y().onTrue(turret.setAngle(Degrees.of(0)));
+    joystick.rightBumper().whileTrue(turret.setAngle(() -> turret.turretRelativeRotation()));
+  }
 
   public Command getAutonomousCommand() {
     /* Run the path selected from the auto chooser */
     return autoChooser.getSelected();
   }
 
-  public void simulationInit() {
-    lastSimTime = Utils.getCurrentTimeSeconds();
-
-    /* Run simulation at a faster rate so PID gains behave more reasonably */
-    simNotifier =
-        new Notifier(
-            () -> {
-              final double currentTime = Utils.getCurrentTimeSeconds();
-              double deltaTime = currentTime - lastSimTime;
-              lastSimTime = currentTime;
-
-              /* Use the measured time delta, get battery voltage from WPILib */
-              drivetrain.updateSimState(deltaTime, RobotController.getBatteryVoltage());
-            });
-    simNotifier.startPeriodic(kSimLoopPeriod);
-  }
-
-  public void simulationPeriodic() {
-    // Update drivetrain simulation
-    drivetrain.simulationPeriodic();
-  }
+  public void simulationPeriodic() {}
 }

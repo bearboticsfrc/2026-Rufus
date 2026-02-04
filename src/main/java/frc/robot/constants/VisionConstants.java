@@ -17,7 +17,7 @@ import frc.robot.vision.VisionCamera;
 public class VisionConstants {
   public static final Distance CULLING_DISTANCE = Meters.of(4); // Meters.of(2.5);
 
-  public static final double CULLING_AMBIGUITY = 0.3; // 0.2;
+  public static final double CULLING_AMBIGUITY = 0.4;
 
   private static final String FRONT_LEFT_CAMERA_NAME = "OV9281FrontLeft";
   private static final String FRONT_RIGHT_CAMERA_NAME = "OV9281FrontRight";
@@ -25,7 +25,7 @@ public class VisionConstants {
 
   public static final Transform3d ROBOT_TO_FRONT_LEFT_CAMERA =
       new Transform3d(
-          new Translation3d(-.25, 0.15, 0.695),
+          new Translation3d(-.272, 0.172, 0.711),
           new Rotation3d(Radians.zero(), Degrees.of(0), Degrees.zero()));
 
   private static final Transform3d ROBOT_TO_FRONT_RIGHT_CAMERA =
@@ -57,6 +57,13 @@ public class VisionConstants {
       new AprilTagFieldLayout(
           APRIL_TAG_FIELD_LAYOUT.getTags().stream()
               .filter(it -> (it.ID >= 2 && it.ID <= 11) || (it.ID >= 18 && it.ID <= 27))
+              .toList(),
+          APRIL_TAG_FIELD_LAYOUT.getFieldLength(),
+          APRIL_TAG_FIELD_LAYOUT.getFieldWidth());
+  public static final AprilTagFieldLayout RED_HUB_TAGS_ONLY_LAYOUT =
+      new AprilTagFieldLayout(
+          APRIL_TAG_FIELD_LAYOUT.getTags().stream()
+              .filter(it -> (it.ID >= 2 && it.ID <= 5 || (it.ID >= 8 && it.ID <= 11)))
               .toList(),
           APRIL_TAG_FIELD_LAYOUT.getFieldLength(),
           APRIL_TAG_FIELD_LAYOUT.getFieldWidth());

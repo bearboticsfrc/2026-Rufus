@@ -36,7 +36,6 @@ public class Vision {
 
   // Simulation
   private PhotonCameraSim cameraSim;
-
   private VisionSystemSim visionSim;
 
   @Logged(name = "Camera Poses", importance = Importance.CRITICAL)
@@ -50,7 +49,7 @@ public class Vision {
       PhotonCamera camera = new PhotonCamera(visionCamera.getName());
 
       PhotonPoseEstimator photonEstimator =
-          new PhotonPoseEstimator(APRIL_TAG_FIELD_LAYOUT, visionCamera.getTransform());
+          new PhotonPoseEstimator(RED_HUB_TAGS_ONLY_LAYOUT, visionCamera.getTransform());
 
       cameras.add(camera);
       photonEstimators.add(photonEstimator);
@@ -60,13 +59,13 @@ public class Vision {
         // Create the vision system simulation which handles cameras and targets on the field.
         visionSim = new VisionSystemSim("main");
         // Add all the AprilTags inside the tag layout as visible targets to this simulated field.
-        visionSim.addAprilTags(APRIL_TAG_FIELD_LAYOUT);
+        visionSim.addAprilTags(RED_HUB_TAGS_ONLY_LAYOUT);
         // Create simulated camera properties. These can be set to mimic your actual camera.
         SimCameraProperties cameraProp = new SimCameraProperties();
-        cameraProp.setCalibration(960, 720, Rotation2d.fromDegrees(70));
+        cameraProp.setCalibration(1280, 800, Rotation2d.fromDegrees(70));
         cameraProp.setCalibError(0.35, 0.10);
-        cameraProp.setFPS(15);
-        cameraProp.setAvgLatencyMs(50);
+        cameraProp.setFPS(50);
+        cameraProp.setAvgLatencyMs(15);
         cameraProp.setLatencyStdDevMs(15);
         // Create a PhotonCameraSim which will update the linked PhotonCamera's values with visible
         // targets.
@@ -75,8 +74,8 @@ public class Vision {
         visionSim.addCamera(cameraSim, visionCamera.getTransform());
 
         // Enable the raw and processed streams. These are enabled by default.
-        // cameraSim.enableRawStream(true);
-        // cameraSim.enableProcessedStream(true);
+        // cameraSim.enableRawStream(false);
+        // cameraSim.enableProcessedStream(false);
 
         // Enable drawing a wireframe visualization of the field to the camera streams.
         // This is extremely resource-intensive and is disabled by default.
@@ -107,40 +106,58 @@ public class Vision {
 
     for (PhotonCamera camera : cameras) {
       Optional<EstimatedRobotPose> visionEstimation = Optional.empty();
-      for (PhotonPipelineResult change : camera.getAllUnreadResults()) {
-        PhotonPoseEstimator photonPoseEstimator = photonEstimators.get(cameras.indexOf(camera));
-        visionEstimation = photonPoseEstimator.estimateCoprocMultiTagPose(change);
-        if (visionEstimation.isEmpty()) {
-          visionEstimation = photonPoseEstimator.estimateLowestAmbiguityPose(change);
-        }
-        if (visionEstimation.isEmpty()) {
-          continue;
-        }
-        if (isTooAmbiguous(visionEstimation.get()) || isTooFar(visionEstimation.get())) {
-          continue;
-        }
+      List<PhotonPipelineResult> changes = camera.getAllUnreadResults();
+      if (changes.isEmpty()) continue;
+      PhotonPipelineResult change = changes.get(changes.size() - 1);
+      // for (PhotonPipelineResult change : changes) {
+      // System.out.println(" Processing change for timestamp " + change.getTimestampSeconds());
+      PhotonPoseEstimator photonPoseEstimator = photonEstimators.get(cameras.indexOf(camera));
+      visionEstimation = photonPoseEstimator.estimateCoprocMultiTagPose(change);
+      if (visionEstimation.isEmpty()) {
+        visionEstimation = photonPoseEstimator.estimateLowestAmbiguityPose(change);
+      }
+      if (visionEstimation.isEmpty()) {
+        continue;
+      }
+      if (isTooAmbiguous(visionEstimation.get()) || isTooFar(visionEstimation.get())) {
+        continue;
+      }
 
-        updatedTargetPoses(visionEstimation.get().targetsUsed);
+      // some brute force analysis to see if the angle of the camera is correct
+      // for (int r = -90; r < 90; r++) {
+      //   Transform3d transform =
+      //       new Transform3d(
+      //           new Translation3d(-.272, 0.172, 0.711),
+      //           new Rotation3d(Degrees.zero(), Degrees.of(r), Degrees.zero()));
+      //   photonPoseEstimator.setRobotToCameraTransform(transform);
+      //   visionEstimation = photonPoseEstimator.estimateLowestAmbiguityPose(change);
+      //   double angle =
+      //       visionEstimation.get().estimatedPose.getRotation().toRotation2d().getDegrees();
+      //   System.out.println(
+      //       "rot " + r + " angle " + angle + " x:" +
+      // visionEstimation.get().estimatedPose.getX());
+      // }
 
-        if (Robot.isSimulation()) {
-          visionEstimation.ifPresentOrElse(
-              est ->
-                  getSimDebugField()
-                      .getObject("VisionEstimation")
-                      .setPose(est.estimatedPose.toPose2d()),
-              () -> {
-                // if (newResult)
-                getSimDebugField().getObject("VisionEstimation").setPoses();
-              });
-        }
+      updatedTargetPoses(visionEstimation.get().targetsUsed);
 
-        visionEstimation.ifPresent(visionEstimates::add);
-        // updateEstimationStdDevs(photonPoseEstimator, visionEstimation, change.getTargets());
-        curStdDevs = SINGLE_TAG_STD_DEVS; // TODO: change to dynamic estimation
+      if (Robot.isSimulation()) {
+        visionEstimation.ifPresentOrElse(
+            est ->
+                getSimDebugField()
+                    .getObject("VisionEstimation")
+                    .setPose(est.estimatedPose.toPose2d()),
+            () -> {
+              // if (newResult)
+              getSimDebugField().getObject("VisionEstimation").setPoses();
+            });
+      }
 
-        if (visionEstimation.isPresent()) {
-          latestCameraPose.put(camera.getName(), visionEstimation.get().estimatedPose.toPose2d());
-        }
+      visionEstimation.ifPresent(visionEstimates::add);
+      updateEstimationStdDevs(photonPoseEstimator, visionEstimation, change.getTargets());
+      // curStdDevs = SINGLE_TAG_STD_DEVS; // TODO: change to dynamic estimation
+
+      if (visionEstimation.isPresent()) {
+        latestCameraPose.put(camera.getName(), visionEstimation.get().estimatedPose.toPose2d());
       }
     }
 
@@ -226,7 +243,7 @@ public class Vision {
 
   // ----- Simulation
   public void simulationPeriodic(Pose2d robotSimPose) {
-    // visionSim.update(robotSimPose);
+    visionSim.update(robotSimPose);
   }
 
   /** Reset pose history of the robot in the vision system simulation. */

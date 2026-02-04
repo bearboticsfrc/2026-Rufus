@@ -14,7 +14,6 @@ import static edu.wpi.first.units.Units.Volts;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.epilogue.Logged;
@@ -39,15 +38,10 @@ import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
 import yams.motorcontrollers.remote.TalonFXWrapper;
-import yams.units.EasyCRT;
-import yams.units.EasyCRTConfig;
 
 public class TurretYAMS extends SubsystemBase {
   CANBus canbus = new CANBus("drive");
   private final TalonFX turretMotor = new TalonFX(30, canbus);
-
-  private final CANcoder turretCANcoderMain = new CANcoder(31, canbus); // 10 tooth
-  private final CANcoder turretCANcoderAux = new CANcoder(32, canbus); // 11 tooth
 
   private final SmartMotorControllerConfig motorConfig =
       new SmartMotorControllerConfig(this)
@@ -80,21 +74,6 @@ public class TurretYAMS extends SubsystemBase {
           .withMOI(Meters.of(0.25), Pounds.of(4)); // MOI Calculation
 
   private final Pivot turret = new Pivot(turretConfig);
-
-  private EasyCRT absoluteEncoder = new EasyCRT(getEasyCRTConfig());
-
-  private EasyCRTConfig getEasyCRTConfig() {
-    return new EasyCRTConfig(
-            turretCANcoderMain.getAbsolutePosition().asSupplier(),
-            turretCANcoderAux.getAbsolutePosition().asSupplier())
-        .withCommonDriveGear(1, 93, 10, 11)
-        .withCrtGearRecommendationInputs(93, 1.0)
-        .withMechanismRange(Rotations.of(0.0), Rotations.of(1.0))
-        .withMatchTolerance(Degrees.of(20))
-        .withAbsoluteEncoder1Inverted(true)
-        .withAbsoluteEncoder2Inverted(false)
-        .withAbsoluteEncoderOffsets(Rotations.of(-.343018), Rotations.of(-.451904));
-  }
 
   private final Supplier<Pose2d> poseSupplier;
 
@@ -135,9 +114,10 @@ public class TurretYAMS extends SubsystemBase {
 
   @Logged
   public Translation2d getTargetPosition() {
-    double distance =  poseSupplier.get().getTranslation().getDistance(blueHub);
-    Transform2d targetTransform = new Transform2d(
-          new Translation2d(distance, 0.0), Rotation2d.k180deg);
+    double distance =
+        poseSupplier.get().getTranslation().getDistance(FlippingUtil.flipFieldPosition(blueHub));
+    Transform2d targetTransform =
+        new Transform2d(new Translation2d(distance, 0.0), Rotation2d.k180deg);
 
     Translation2d targetPos = poseSupplier.get().transformBy(targetTransform).getTranslation();
     return targetPos;
@@ -154,35 +134,10 @@ public class TurretYAMS extends SubsystemBase {
     return new Pose2d(poseSupplier.get().getTranslation(), turretRotation);
   }
 
-  @Logged
-  public double getAbsoluteAngle() {
-    return absoluteEncoder.getAngleOptional().orElse(Degrees.of(-1)).in(Degrees);
-  }
-
-  @Logged
-  public String getAbsoluteAngleStatus() {
-    return absoluteEncoder.getLastStatus();
-  }
-
-  @Logged
-  public double getAbsoluteAngleIterations() {
-    return absoluteEncoder.getLastIterations();
-  }
-
   public boolean isAtAngle() {
     return turretSMC
         .getMechanismPosition()
         .isNear(turretSMC.getMechanismPositionSetpoint().orElse(Degrees.of(0)), Degrees.of(2.0));
-  }
-
-  @Logged
-  public double getAbsoluteAngleMain() {
-    return turretCANcoderMain.getAbsolutePosition().getValue().in(Degrees);
-  }
-
-  @Logged
-  public double getAbsoluteAngleAux() {
-    return turretCANcoderAux.getAbsolutePosition().getValue().in(Degrees);
   }
 
   public Command setAngle(Angle angle) {

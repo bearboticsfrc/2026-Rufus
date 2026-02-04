@@ -13,6 +13,7 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
@@ -40,6 +41,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   private static final double kSimLoopPeriod = 0.005; // 5ms
   private Notifier m_simNotifier = null;
   private double m_lastSimTime;
+
+  public static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(0.01, 0.01, Math.toRadians(1));
 
   /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
   private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -160,6 +163,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
     configureAutoBuilder();
     poseEstimationNotifier.startPeriodic(0.2);
+    setStateStdDevs(STD_DEVS);
   }
 
   /**
@@ -194,6 +198,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
     configureAutoBuilder();
     poseEstimationNotifier.startPeriodic(0.02);
+    setStateStdDevs(STD_DEVS);
   }
 
   @Override
