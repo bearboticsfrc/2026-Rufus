@@ -15,6 +15,7 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -62,7 +63,6 @@ public class RobotContainer {
   private final SwerveRequest.FieldCentricFacingAngle findHub =
       new SwerveRequest.FieldCentricFacingAngle()
           .withDeadband(MaxSpeed * 0.1)
-          .withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
           .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
   private final Telemetry logger = new Telemetry(MaxSpeed);
@@ -105,8 +105,7 @@ public class RobotContainer {
                         -joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
                     .withRotationalRate(
                         -joystick.getRightX()
-                            * MaxAngularRate) // Drive counterclockwise with negative X (left)
-            ));
+                            * MaxAngularRate))); // Drive counterclockwise with negative X (left)
 
     // Idle while the robot is disabled. This ensures the configured
     // neutral mode is applied to the drive motors while disabled.
@@ -135,20 +134,24 @@ public class RobotContainer {
     joystick.y().onTrue(turret.setAngle(negativeNinetyDegrees));
     joystick.rightBumper().toggleOnTrue(turret.setAngle(() -> turret.turretRelativeRotation()));
 
+    
     // changes to hub-rotation swerve request
     joystick
         .rightTrigger()
-        .toggleOnTrue(
+        .whileTrue(
             drivetrain.applyRequest(
-                () ->
-                    findHub
+                () -> {
+                SmartDashboard.putString("Test");
+
+                return new  SwerveRequest. FieldCentricFacingAngle()findHub
                         .withVelocityX(
                             -joystick.getLeftY()
                                 * MaxSpeed) // Drive forward with negative Y (forward)
                         .withVelocityY(
-                            -joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)));
-                        .withTargetDirection(
-                            ((getHub().minus(poseSupplier.get().getTranslation())).getAngle()))));
+                            -joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                        .withTargetDirection(getHubRotation())
+                } 
+                   ));
 
     // rumble when on bump
     onBump.whileTrue(
@@ -188,5 +191,9 @@ public class RobotContainer {
   public void simulationPeriodic() {
     // Update drivetrain simulation
     drivetrain.simulationPeriodic();
+  }
+
+  public Rotation2d getHubRotation() {
+    return ((getHub().minus(poseSupplier.get().getTranslation())).getAngle());
   }
 }
