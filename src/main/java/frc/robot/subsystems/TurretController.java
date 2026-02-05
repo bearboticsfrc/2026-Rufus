@@ -67,8 +67,8 @@ public class TurretController extends SubsystemBase {
 
   public Transform3d cameraTransform =
       new Transform3d(
-          new Translation3d(-.272, 0.172, 0.711),
-          new Rotation3d(Degrees.zero(), Degrees.of(-18), Degrees.of(0)));
+          new Translation3d(-.05, 0.1, 0.6),
+          new Rotation3d(Degrees.zero(), Degrees.of(-24), Degrees.of(0)));
 
   public TurretController(Supplier<Pose2d> poseSupplier, Consumer<Angle> turret) {
     this.poseSupplier = poseSupplier;
