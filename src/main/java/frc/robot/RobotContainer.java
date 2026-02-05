@@ -134,24 +134,20 @@ public class RobotContainer {
     joystick.y().onTrue(turret.setAngle(negativeNinetyDegrees));
     joystick.rightBumper().toggleOnTrue(turret.setAngle(() -> turret.turretRelativeRotation()));
 
-    
     // changes to hub-rotation swerve request
     joystick
         .rightTrigger()
         .whileTrue(
             drivetrain.applyRequest(
-                () -> {
-                SmartDashboard.putString("Test");
-
-                return new  SwerveRequest. FieldCentricFacingAngle()findHub
+                () ->
+                    findHub
                         .withVelocityX(
                             -joystick.getLeftY()
                                 * MaxSpeed) // Drive forward with negative Y (forward)
                         .withVelocityY(
                             -joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                        .withTargetDirection(getHubRotation())
-                } 
-                   ));
+                        .withHeadingPID(18, 0, .1)
+                        .withTargetDirection(getHubRotation())));
 
     // rumble when on bump
     onBump.whileTrue(
