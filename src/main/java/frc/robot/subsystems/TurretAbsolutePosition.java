@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.Rotations;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.CANcoder;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.units.measure.Angle;
 import yams.units.EasyCRT;
 import yams.units.EasyCRTConfig;
 
@@ -53,5 +54,43 @@ public class TurretAbsolutePosition {
   @Logged
   public double getAbsoluteAngleAux() {
     return turretCANcoderAux.getAbsolutePosition().getValue().in(Degrees);
+  }
+
+  private static double GEAR_0_TOOTH_COUNT = 93.0;
+  private static double GEAR_1_TOOTH_COUNT = 10.0;
+  private static double GEAR_2_TOOTH_COUNT = 11.0;
+
+  private static double SLOPE =
+      (GEAR_2_TOOTH_COUNT * GEAR_1_TOOTH_COUNT)
+          / ((GEAR_1_TOOTH_COUNT - GEAR_2_TOOTH_COUNT) * GEAR_0_TOOTH_COUNT);
+
+  public static double calculateAngleFromEncoders(Angle encoder1, Angle encoder2) {
+    double difference = encoder2.in(Degrees) - encoder1.in(Degrees);
+    if (difference > 250) {
+      difference -= 360;
+    }
+    if (difference < -250) {
+      difference += 360;
+    }
+    difference *= SLOPE;
+    double e1Rotations = (difference * GEAR_0_TOOTH_COUNT / GEAR_1_TOOTH_COUNT) / 360.0;
+    double e1RotationsFloored = Math.floor(e1Rotations);
+    double turretAngle =
+        (e1RotationsFloored * 360 + encoder1.in(Degrees))
+            * (GEAR_1_TOOTH_COUNT / GEAR_0_TOOTH_COUNT);
+    if (turretAngle - difference < -100) {
+      turretAngle += GEAR_1_TOOTH_COUNT / GEAR_0_TOOTH_COUNT * 360.0;
+    } else if (turretAngle - difference > 100) {
+      turretAngle -= GEAR_1_TOOTH_COUNT / GEAR_0_TOOTH_COUNT * 360.0;
+    }
+
+    return turretAngle;
+  }
+
+  @Logged
+  public double getAbsoluteAngle2910Style() {
+    return calculateAngleFromEncoders(
+        turretCANcoderMain.getAbsolutePosition().getValue(),
+        turretCANcoderAux.getAbsolutePosition().getValue());
   }
 }

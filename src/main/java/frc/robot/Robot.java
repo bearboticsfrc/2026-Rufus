@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import bearlib.fms.AllianceColor;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
@@ -40,6 +41,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotPeriodic() {
+    DriverStation.getAlliance().ifPresent(AllianceColor::setAllianceColor);
     CommandScheduler.getInstance().run();
   }
 
