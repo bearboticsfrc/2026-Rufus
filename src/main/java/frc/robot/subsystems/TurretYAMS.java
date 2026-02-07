@@ -21,18 +21,15 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.TrajectoryCalculator.TargetingSolver;
-
 import java.util.function.Supplier;
 import yams.gearing.GearBox;
 import yams.gearing.MechanismGearing;
@@ -104,7 +101,6 @@ public class TurretYAMS extends SubsystemBase {
   private final Supplier<Pose2d> poseSupplier;
   private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;
 
-
   /**
    * Predicts the robot's pose after a given time interval for ANY drivetrain.
    *
@@ -113,8 +109,8 @@ public class TurretYAMS extends SubsystemBase {
    * @param deltaTimeSeconds Time into the future to predict
    * @return Predicted future pose
    */
-  public static Pose2d predictFuturePose(Pose2d currentPose, ChassisSpeeds chassisSpeeds, double deltaTimeSeconds) 
-  {
+  public static Pose2d predictFuturePose(
+      Pose2d currentPose, ChassisSpeeds chassisSpeeds, double deltaTimeSeconds) {
     // Calculate change in position over deltaTime
     double dx = chassisSpeeds.vxMetersPerSecond * deltaTimeSeconds;
     double dy = chassisSpeeds.vyMetersPerSecond * deltaTimeSeconds;
@@ -139,6 +135,10 @@ public class TurretYAMS extends SubsystemBase {
   @Logged Rotation2d robotRotation;
   @Logged Rotation2d turretRotation;
   @Logged Angle turretRelativeRotation;
+  @Logged Rotation2d futureRobotRotation;
+  @Logged Rotation2d futureTurretRotation;
+  @Logged Angle futureTurretRelativeRotation;
+  @Logged Pose2d futurePose;
 
   public Translation2d getHub() {
     return FlippingUtil.flipFieldPosition(blueHub);
@@ -159,12 +159,19 @@ public class TurretYAMS extends SubsystemBase {
     turretRelativeRotation = Degrees.of(robotRotation.minus(turretRotation).getDegrees());
   }
 
+  public void updateFutureTurretRotation(Pose2d futureLocation) {
+    futureRobotRotation = futureLocation.getRotation();
+    futureTurretRotation = ((getHub().minus(futureLocation.getTranslation())).getAngle());
+    futureTurretRelativeRotation =
+        Degrees.of(futureRobotRotation.minus(futureTurretRotation).getDegrees());
+    futurePose = new Pose2d(futureLocation.getTranslation(), futureTurretRotation);
+  }
+
   @Logged
+  // gets the angle from the turret relative to the field
   public double getTurretRotationDegrees() {
     return turretRotation.getDegrees();
   }
-
-
 
   @Logged
   public double getRobotRotationDegrees() {
@@ -177,34 +184,31 @@ public class TurretYAMS extends SubsystemBase {
   }
 
   @Logged
-  public double getHubDistance()
-  {
+  public double getHubDistance() {
     return ((poseSupplier.get().getTranslation()).getDistance(getHub()));
   }
+
   @Logged
-  public double getOutpostDistance()
-  {
+  public double getOutpostDistance() {
     return ((poseSupplier.get().getTranslation()).getDistance(getOutpost()));
   }
+
   @Logged
-  public double getDepotDistance()
-  {
+  public double getDepotDistance() {
     return ((poseSupplier.get().getTranslation()).getDistance(getDepot()));
   }
 
-  public double getHubDistance(Pose2d location)
-  {
+  public double getHubDistance(Pose2d location) {
     return ((location.getTranslation()).getDistance(getHub()));
   }
-  public double getOutpostDistance(Pose2d location)
-  {
+
+  public double getOutpostDistance(Pose2d location) {
     return ((location.getTranslation()).getDistance(getOutpost()));
   }
-  public double getDepotDistance(Pose2d location)
-  {
+
+  public double getDepotDistance(Pose2d location) {
     return ((location.getTranslation()).getDistance(getDepot()));
   }
-
 
   // turrets rotation relative to robot
   public Angle turretRelativeRotation() {
@@ -315,63 +319,55 @@ public class TurretYAMS extends SubsystemBase {
     return m_sysIdRoutine.dynamic(direction);
   }
 
-  //calculates trajectory, returns time, velocity, and angle of launch, will need to correct angle variance
-  //Hood will need to be perpindicular to the returned angle
-  public double[] getHubTrajectorySolutions()
-  {
+  // calculates trajectory, returns time, velocity, and angle of launch, will need to correct angle
+  // variance
+  // Hood will need to be perpindicular to the returned angle
+  public double[] getHubTrajectorySolutions() {
     return TargetingSolver.solveHubTrajectory(getHubDistance() * 3.28);
   }
-  public double[] getDepotTrajectorySolutions()
-  {
+
+  public double[] getDepotTrajectorySolutions() {
     return TargetingSolver.solveGroundTrajectory(getDepotDistance() * 3.28);
   }
-  public double[] getOutpostTrajectorySolutions()
-  {
+
+  public double[] getOutpostTrajectorySolutions() {
     return TargetingSolver.solveGroundTrajectory(getOutpostDistance() * 3.28);
   }
 
-  public double[] getHubTrajectorySolutions(Pose2d robotPose)
-  {
+  public double[] getHubTrajectorySolutions(Pose2d robotPose) {
     return TargetingSolver.solveHubTrajectory(getHubDistance(robotPose) * 3.28);
   }
-  public double[] getDepotTrajectorySolutions(Pose2d robotPose)
-  {
+
+  public double[] getDepotTrajectorySolutions(Pose2d robotPose) {
     return TargetingSolver.solveGroundTrajectory(getDepotDistance(robotPose) * 3.28);
   }
-  public double[] getOutpostTrajectorySolutions(Pose2d robotPose)
-  {
+
+  public double[] getOutpostTrajectorySolutions(Pose2d robotPose) {
     return TargetingSolver.solveGroundTrajectory(getOutpostDistance(robotPose) * 3.28);
   }
 
-  // public double[] predictFuturePose(double time)
-  // {
-  //   return CommandSwerveDrivetrain.getFuturePose(time);
-  // }
-
-  public ChassisSpeeds getChassisSpeeds()
-  {
+  public ChassisSpeeds getChassisSpeeds() {
     return chassisSpeedsSupplier.get();
   }
 
-  public double[] ShootOnMoveSolver(String targetLocation)
-  {
+  // calculates trajectory, returns time, velocity, angle of launch, where turret needs to face,
+  // will need to correct angle variance
+  public double[] ShootOnMoveSolver(String targetLocation) {
     double[] trajectorySolution;
-    if (targetLocation.equals("Outpost"))
-    {
+    if (targetLocation.equals("Outpost")) {
       trajectorySolution = getOutpostTrajectorySolutions();
       Pose2d futurePose = predictFuturePose(poseSupplier.get(), getChassisSpeeds(), trajectorySolution[0]);
+      updateFutureTurretRotation(futurePose);
       trajectorySolution = getOutpostTrajectorySolutions(futurePose);
-    }
-    else if (targetLocation.equals("Depot"))
-    {
+    } else if (targetLocation.equals("Depot")) {
       trajectorySolution = getDepotTrajectorySolutions();
       Pose2d futurePose = predictFuturePose(poseSupplier.get(), getChassisSpeeds(), trajectorySolution[0]);
+      updateFutureTurretRotation(futurePose);
       trajectorySolution = getDepotTrajectorySolutions(futurePose);
-    }
-    else
-    {
+    } else {
       trajectorySolution = getHubTrajectorySolutions();
       Pose2d futurePose = predictFuturePose(poseSupplier.get(), getChassisSpeeds(), trajectorySolution[0]);
+      updateFutureTurretRotation(futurePose);
       trajectorySolution = getHubTrajectorySolutions(futurePose);
     }
     return trajectorySolution;

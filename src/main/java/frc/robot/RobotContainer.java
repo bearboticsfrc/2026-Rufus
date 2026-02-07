@@ -15,7 +15,6 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Notifier;
@@ -56,7 +55,14 @@ public class RobotContainer {
 
   public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-  public final TurretYAMS turret = new TurretYAMS(() -> drivetrain.getPose(), () -> drivetrain.getState().Speeds);
+  public final TurretYAMS turret =
+      new TurretYAMS(() -> drivetrain.getPose(), () -> drivetrain.getState().Speeds);
+
+  Translation2d blueHub = new Translation2d(4.63, 4.03);
+
+  public Translation2d getHub() {
+    return FlippingUtil.flipFieldPosition(blueHub);
+  }
 
   /* Path follower */
   private final SendableChooser<Command> autoChooser;
@@ -69,8 +75,7 @@ public class RobotContainer {
     // Warmup PathPlanner to avoid Java pauses
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
 
-    Pose2d startingPose =
-        FlippingUtil.flipFieldPose(((PathPlannerAuto) autoChooser.getSelected()).getStartingPose());
+    Pose2d startingPose = FlippingUtil.flipFieldPose(((PathPlannerAuto) autoChooser.getSelected()).getStartingPose());
     drivetrain.resetPose(startingPose);
   }
 
@@ -126,16 +131,6 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     /* Run the path selected from the auto chooser */
     return autoChooser.getSelected();
-  }
-
-  Translation2d blueHub = new Translation2d(4.63, 4.03);
-
-  public Translation2d getHub() {
-    return FlippingUtil.flipFieldPosition(blueHub);
-  }
-
-  public Rotation2d getAngleToHub() {
-    return getHub().minus(drivetrain.getPose().getTranslation()).getAngle();
   }
 
   public void simulationInit() {
