@@ -138,7 +138,7 @@ public class TurretYAMS extends SubsystemBase {
   @Logged Rotation2d futureRobotRotation;
   @Logged Rotation2d futureTurretRotation;
   @Logged Angle futureTurretRelativeRotation;
-  @Logged Pose2d futurePose;
+  @Logged Pose2d futureLocation;
 
   public Translation2d getHub() {
     return FlippingUtil.flipFieldPosition(blueHub);
@@ -159,12 +159,12 @@ public class TurretYAMS extends SubsystemBase {
     turretRelativeRotation = Degrees.of(robotRotation.minus(turretRotation).getDegrees());
   }
 
-  public void updateFutureTurretRotation(Pose2d futureLocation) {
-    futureRobotRotation = futureLocation.getRotation();
-    futureTurretRotation = ((getHub().minus(futureLocation.getTranslation())).getAngle());
+  public void updateFutureTurretRotation(Pose2d futurePose) {
+    futureRobotRotation = futurePose.getRotation();
+    futureTurretRotation = ((getHub().minus(futurePose.getTranslation())).getAngle());
     futureTurretRelativeRotation =
         Degrees.of(futureRobotRotation.minus(futureTurretRotation).getDegrees());
-    futurePose = new Pose2d(futureLocation.getTranslation(), futureTurretRotation);
+    this.futureLocation = new Pose2d(futurePose.getTranslation(), futureTurretRotation);
   }
 
   @Logged
@@ -288,6 +288,7 @@ public class TurretYAMS extends SubsystemBase {
   public void periodic() {
     updateTurretRotation();
     turret.updateTelemetry();
+    ShootOnMoveSolver("Hub");
   }
 
   @Override
@@ -356,17 +357,20 @@ public class TurretYAMS extends SubsystemBase {
     double[] trajectorySolution;
     if (targetLocation.equals("Outpost")) {
       trajectorySolution = getOutpostTrajectorySolutions();
-      Pose2d futurePose = predictFuturePose(poseSupplier.get(), getChassisSpeeds(), trajectorySolution[0]);
+      Pose2d futurePose =
+          predictFuturePose(poseSupplier.get(), getChassisSpeeds(), trajectorySolution[0]);
       updateFutureTurretRotation(futurePose);
       trajectorySolution = getOutpostTrajectorySolutions(futurePose);
     } else if (targetLocation.equals("Depot")) {
       trajectorySolution = getDepotTrajectorySolutions();
-      Pose2d futurePose = predictFuturePose(poseSupplier.get(), getChassisSpeeds(), trajectorySolution[0]);
+      Pose2d futurePose =
+          predictFuturePose(poseSupplier.get(), getChassisSpeeds(), trajectorySolution[0]);
       updateFutureTurretRotation(futurePose);
       trajectorySolution = getDepotTrajectorySolutions(futurePose);
     } else {
       trajectorySolution = getHubTrajectorySolutions();
-      Pose2d futurePose = predictFuturePose(poseSupplier.get(), getChassisSpeeds(), trajectorySolution[0]);
+      Pose2d futurePose =
+          predictFuturePose(poseSupplier.get(), getChassisSpeeds(), trajectorySolution[0]);
       updateFutureTurretRotation(futurePose);
       trajectorySolution = getHubTrajectorySolutions(futurePose);
     }

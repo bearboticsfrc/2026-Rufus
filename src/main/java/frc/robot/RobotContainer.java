@@ -11,10 +11,8 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.FollowPathCommand;
-import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Notifier;
@@ -75,8 +73,10 @@ public class RobotContainer {
     // Warmup PathPlanner to avoid Java pauses
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
 
-    Pose2d startingPose = FlippingUtil.flipFieldPose(((PathPlannerAuto) autoChooser.getSelected()).getStartingPose());
-    drivetrain.resetPose(startingPose);
+    //   Pose2d startingPose =
+    //       FlippingUtil.flipFieldPose(((PathPlannerAuto)
+    // autoChooser.getSelected()).getStartingPose());
+    //   drivetrain.resetPose(startingPose);
   }
 
   private void configureBindings() {
