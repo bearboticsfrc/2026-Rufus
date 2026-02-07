@@ -332,15 +332,15 @@ public class TurretYAMS extends SubsystemBase {
 
   public double[] getHubTrajectorySolutions(Pose2d robotPose)
   {
-    return TargetingSolver.solveHubTrajectory(getHubDistance() * 3.28);
+    return TargetingSolver.solveHubTrajectory(getHubDistance(robotPose) * 3.28);
   }
   public double[] getDepotTrajectorySolutions(Pose2d robotPose)
   {
-    return TargetingSolver.solveGroundTrajectory(getDepotDistance() * 3.28);
+    return TargetingSolver.solveGroundTrajectory(getDepotDistance(robotPose) * 3.28);
   }
   public double[] getOutpostTrajectorySolutions(Pose2d robotPose)
   {
-    return TargetingSolver.solveGroundTrajectory(getOutpostDistance() * 3.28);
+    return TargetingSolver.solveGroundTrajectory(getOutpostDistance(robotPose) * 3.28);
   }
 
   // public double[] predictFuturePose(double time)
@@ -353,26 +353,26 @@ public class TurretYAMS extends SubsystemBase {
     return chassisSpeedsSupplier.get();
   }
 
-  public double[] ShootOnMoveSolver(Pose2d roboPose2d, String targetLocation)
+  public double[] ShootOnMoveSolver(String targetLocation)
   {
     double[] trajectorySolution;
     if (targetLocation.equals("Outpost"))
     {
       trajectorySolution = getOutpostTrajectorySolutions();
-      Pose2d pose = predictFuturePose(roboPose2d, getChassisSpeeds(), trajectorySolution[0]);
-      trajectorySolution = getOutpostTrajectorySolutions(pose);
+      Pose2d futurePose = predictFuturePose(poseSupplier.get(), getChassisSpeeds(), trajectorySolution[0]);
+      trajectorySolution = getOutpostTrajectorySolutions(futurePose);
     }
     else if (targetLocation.equals("Depot"))
     {
       trajectorySolution = getDepotTrajectorySolutions();
-      Pose2d pose = predictFuturePose(roboPose2d, getChassisSpeeds(), trajectorySolution[0]);
-      trajectorySolution = getDepotTrajectorySolutions(pose);
+      Pose2d futurePose = predictFuturePose(poseSupplier.get(), getChassisSpeeds(), trajectorySolution[0]);
+      trajectorySolution = getDepotTrajectorySolutions(futurePose);
     }
     else
     {
       trajectorySolution = getHubTrajectorySolutions();
-      Pose2d pose = predictFuturePose(roboPose2d, getChassisSpeeds(), trajectorySolution[0]);
-      trajectorySolution = getHubTrajectorySolutions(pose);
+      Pose2d futurePose = predictFuturePose(poseSupplier.get(), getChassisSpeeds(), trajectorySolution[0]);
+      trajectorySolution = getHubTrajectorySolutions(futurePose);
     }
     return trajectorySolution;
   }
