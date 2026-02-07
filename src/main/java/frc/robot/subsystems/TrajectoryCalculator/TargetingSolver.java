@@ -61,8 +61,8 @@ public class TargetingSolver {
   public static double[] solveHubTrajectory(double distance) {
     return solveTrajectory(
         distance,
-        6,
-        -0.5 /* potentially an issue that needs to be made positive instead of negative */,
+        12,
+        0.5 /* potentially an issue that needs to be made positive instead of negative */,
         2.5,
         0.5,
         true);
@@ -72,7 +72,7 @@ public class TargetingSolver {
     return solveTrajectory(
         distance,
         0,
-        -0.5 /* potentially an issue that needs to be made positive instead of negative */,
+        0.5 /* potentially an issue that needs to be made positive instead of negative */,
         -0.5,
         -0.5,
         false);

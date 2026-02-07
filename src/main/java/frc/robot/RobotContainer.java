@@ -80,32 +80,11 @@ public class RobotContainer {
     configureBindings();
     // Warmup PathPlanner to avoid Java pauses
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
-
-    //   Pose2d startingPose =
-    //       FlippingUtil.flipFieldPose(((PathPlannerAuto)
-    // autoChooser.getSelected()).getStartingPose());
-    //   drivetrain.resetPose(startingPose);
   }
 
   public void fuelTrajectorySims() {
     double[] solutions = turret.ShootOnMoveSolver("Hub");
 
-    fuelSim.registerRobot(
-        0.85, // from left to right
-        0.85, // from front to back
-        0.1524, // from floor to top of bumpers
-        poseSupplier, // Supplier<Pose2d> of robot pose
-        fieldSpeedsSupplier); // Supplier<ChassisSpeeds> of field-centric chassis speeds
-
-    fuelSim.setSubticks(
-        5); // sets the number of physics iterations to perform per 20ms loop. Default = 5
-    fuelSim.spawnStartingFuel(); // spawns fuel in the depots and neutral zone
-    // fuelSim.stop(); // stops the simulation running (updateSim will do nothing until start is
-    // called
-    fuelSim.start(); // enables the simulation to run (updateSim must still be called periodically)
-    // again)
-    fuelSim.enableAirResistance(); // an additional drag force will be applied to fuel in physics
-    // update step
     fuelSim.launchFuel(
         MetersPerSecond.of(solutions[1] / 3.2808399),
         Degrees.of(90 - solutions[2]),
@@ -117,7 +96,6 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    fuelTrajectorySims();
     // Note that X is defined as forward according to WPILib convention,
     // and Y is defined as to the left according to WPILib convention.
     drivetrain.setDefaultCommand(
@@ -181,10 +159,32 @@ public class RobotContainer {
               drivetrain.updateSimState(deltaTime, RobotController.getBatteryVoltage());
             });
     simNotifier.startPeriodic(kSimLoopPeriod);
+    fuelSim.registerRobot(
+        0.85, // from left to right
+        0.85, // from front to back
+        0.1524, // from floor to top of bumpers
+        poseSupplier, // Supplier<Pose2d> of robot pose
+        fieldSpeedsSupplier); // Supplier<ChassisSpeeds> of field-centric chassis speeds
+
+    fuelSim.setSubticks(
+        5); // sets the number of physics iterations to perform per 20ms loop. Default = 5
+    fuelSim.spawnStartingFuel(); // spawns fuel in the depots and neutral zone
+    // fuelSim.stop(); // stops the simulation running (updateSim will do nothing until start is
+    // called
+    fuelSim.start(); // enables the simulation to run (updateSim must still be called periodically)
+    // again)
+    fuelSim.enableAirResistance(); // an additional drag force will be applied to fuel in physics
+    // update step
+
+    //   Pose2d startingPose =
+    //       FlippingUtil.flipFieldPose(((PathPlannerAuto)
+    // autoChooser.getSelected()).getStartingPose());
+    //   drivetrain.resetPose(startingPose);
   }
 
   public void simulationPeriodic() {
     // Update drivetrain simulation
     drivetrain.simulationPeriodic();
+    fuelTrajectorySims();
   }
 }

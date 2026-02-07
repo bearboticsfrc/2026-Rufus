@@ -138,7 +138,7 @@ public class TurretYAMS extends SubsystemBase {
   @Logged Rotation2d futureRobotRotation;
   @Logged Rotation2d futureTurretRotation;
   @Logged Angle futureTurretRelativeRotation;
-  @Logged Pose2d futureLocation;
+  @Logged Pose2d futureLocation = new Pose2d();
 
   public Translation2d getHub() {
     return FlippingUtil.flipFieldPosition(blueHub);
