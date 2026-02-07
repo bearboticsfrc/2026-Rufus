@@ -17,6 +17,15 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 public class FuelHunt extends Command {
 
+public enum TargetSide { LEFT, RIGHT, BOTH }
+
+private TargetSide preferredSide = TargetSide.BOTH;
+
+/** Call to set the side to focus on. Default is BOTH. */
+public void setPreferredSide(TargetSide side) {
+  this.preferredSide = side;
+}
+
   private double MaxSpeed =
       TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) / 4; // kSpeedAt12Volts desired top speed
 
