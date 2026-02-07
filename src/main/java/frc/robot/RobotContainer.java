@@ -146,7 +146,7 @@ public class RobotContainer {
                                 * MaxSpeed) // Drive forward with negative Y (forward)
                         .withVelocityY(
                             -joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                        .withHeadingPID(18, 0, .1)
+                        .withHeadingPID(15, 0, .1)
                         .withTargetDirection(getHubRotation())));
 
     // rumble when on bump
