@@ -54,7 +54,7 @@ public class RobotContainer {
 
   public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-  public final TurretYAMS turret = new TurretYAMS(() -> drivetrain.getPose());
+  public final TurretYAMS turret = new TurretYAMS(() -> drivetrain.getPose(), () -> drivetrain.getState().Speeds);
 
   /* Path follower */
   private final SendableChooser<Command> autoChooser;

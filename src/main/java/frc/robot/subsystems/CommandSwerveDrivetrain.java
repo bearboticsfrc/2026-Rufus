@@ -243,15 +243,26 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
   }
 
-  // SwerveModuleState frontLeftState = new SwerveModuleState(flSpeed, flAngle);
-  // SwerveModuleState frontRightState = new SwerveModuleState(frSpeed, frAngle);
-  // SwerveModuleState backLeftState = new SwerveModuleState(blSpeed, blAngle);
-  // SwerveModuleState backRightState = new SwerveModuleState(brSpeed, brAngle);
+  // public double[] getFuturePose(double lookaheadTimeSeconds) {
+  //   Pose2d currentPose = getState().Pose;
+  //   ChassisSpeeds currentSpeeds = getState().Speeds;
 
-  // // Convert module states to chassis speeds
-  // ChassisSpeeds chassisSpeeds = swerveKinematics.toChassisSpeeds(
-  //     frontLeftState, frontRightState, backLeftState, backRightState
-  // );
+  //   // Simple constant velocity prediction
+  //   double futureX =
+  //       currentPose.getX() + currentSpeeds.vxMetersPerSecond * lookaheadTimeSeconds;
+  //   double futureY =
+  //       currentPose.getY() + currentSpeeds.vyMetersPerSecond * lookaheadTimeSeconds;
+  //   double futureTheta =
+  //       currentPose.getRotation().getRadians()
+  //           + currentSpeeds.omegaRadiansPerSecond * lookaheadTimeSeconds;
+
+  //   return new double[] {futureX, futureY, futureTheta};
+  // }
+
+  // public SwerveDriveState getSwerveDriveState() {
+  //   return getState();
+  // }
+
 
   /**
    * Adds vision-based pose estimation measurements to the drivetrain.
