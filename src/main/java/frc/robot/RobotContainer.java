@@ -13,7 +13,9 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
@@ -26,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.TurretYAMS;
+import java.util.function.Supplier;
 
 @Logged
 public class RobotContainer {
@@ -49,12 +52,17 @@ public class RobotContainer {
 
   private final Telemetry logger = new Telemetry(MaxSpeed);
 
+  @Logged public final bearlib.util.FuelSim.FuelSim fuelSim = new bearlib.util.FuelSim.FuelSim();
+
   private final CommandXboxController joystick = new CommandXboxController(0);
 
   public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
   public final TurretYAMS turret =
       new TurretYAMS(() -> drivetrain.getPose(), () -> drivetrain.getState().Speeds);
+
+  public final Supplier<Pose2d> poseSupplier = () -> drivetrain.getPose();
+  public final Supplier<ChassisSpeeds> fieldSpeedsSupplier = () -> drivetrain.getState().Speeds;
 
   Translation2d blueHub = new Translation2d(4.63, 4.03);
 
@@ -79,7 +87,37 @@ public class RobotContainer {
     //   drivetrain.resetPose(startingPose);
   }
 
+  public void fuelTrajectorySims() {
+    double[] solutions = turret.ShootOnMoveSolver("Hub");
+
+    fuelSim.registerRobot(
+        0.85, // from left to right
+        0.85, // from front to back
+        0.1524, // from floor to top of bumpers
+        poseSupplier, // Supplier<Pose2d> of robot pose
+        fieldSpeedsSupplier); // Supplier<ChassisSpeeds> of field-centric chassis speeds
+
+    fuelSim.setSubticks(
+        5); // sets the number of physics iterations to perform per 20ms loop. Default = 5
+    fuelSim.spawnStartingFuel(); // spawns fuel in the depots and neutral zone
+    // fuelSim.stop(); // stops the simulation running (updateSim will do nothing until start is
+    // called
+    fuelSim.start(); // enables the simulation to run (updateSim must still be called periodically)
+    // again)
+    fuelSim.enableAirResistance(); // an additional drag force will be applied to fuel in physics
+    // update step
+    fuelSim.launchFuel(
+        MetersPerSecond.of(solutions[1] / 3.2808399),
+        Degrees.of(90 - solutions[2]),
+        Degrees.of(solutions[3]),
+        Meters.of(0.6));
+    System.out.println("test");
+    // Spawns a fuel onto the field at the robot's position with a specified launch velocity and
+    // angles, accounting for robot movement (robot must be registered)
+  }
+
   private void configureBindings() {
+    fuelTrajectorySims();
     // Note that X is defined as forward according to WPILib convention,
     // and Y is defined as to the left according to WPILib convention.
     drivetrain.setDefaultCommand(
@@ -115,18 +153,13 @@ public class RobotContainer {
     drivetrain.registerTelemetry(logger::telemeterize);
 
     joystick.a().onTrue(turret.setAngle(ninteyDegrees));
-    joystick.b().onTrue(turret.setAngle(zeroDegrees));
-    joystick.x().onTrue(turret.setAngle(oneEightyDegrees));
-    joystick.y().onTrue(turret.setAngle(twoSeventyDegrees));
+    // joystick.b().onTrue(turret.setAngle(zeroDegrees));
+    // joystick.x().onTrue(turret.setAngle(oneEightyDegrees));
+    // joystick.y().onTrue(turret.setAngle(twoSeventyDegrees));
     joystick.rightBumper().whileTrue(turret.setAngle(() -> turret.turretRelativeRotation()));
   }
 
   public Angle ninteyDegrees = Degrees.of(90);
-  public Angle oneEightyDegrees = Degrees.of(180);
-  public Angle twoSeventyDegrees = Degrees.of(270);
-
-  public Angle zeroDegrees = Degrees.of(0);
-  public Angle turretIncrementAngle = Degrees.of(5);
 
   public Command getAutonomousCommand() {
     /* Run the path selected from the auto chooser */

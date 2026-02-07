@@ -288,6 +288,7 @@ public class TurretYAMS extends SubsystemBase {
   public void periodic() {
     updateTurretRotation();
     turret.updateTelemetry();
+    updateFutureTurretRotation(futureLocation);
     ShootOnMoveSolver("Hub");
   }
 
@@ -351,7 +352,7 @@ public class TurretYAMS extends SubsystemBase {
     return chassisSpeedsSupplier.get();
   }
 
-  // calculates trajectory, returns time, velocity, angle of launch, where turret needs to face,
+  // calculates trajectory, returns time, speed(f/s), angle of launch, where turret needs to face,
   // will need to correct angle variance
   public double[] ShootOnMoveSolver(String targetLocation) {
     double[] trajectorySolution;
@@ -374,6 +375,11 @@ public class TurretYAMS extends SubsystemBase {
       updateFutureTurretRotation(futurePose);
       trajectorySolution = getHubTrajectorySolutions(futurePose);
     }
-    return trajectorySolution;
+    return new double[] {
+      trajectorySolution[0],
+      trajectorySolution[1],
+      trajectorySolution[2],
+      futureTurretRotation.getDegrees()
+    };
   }
 }

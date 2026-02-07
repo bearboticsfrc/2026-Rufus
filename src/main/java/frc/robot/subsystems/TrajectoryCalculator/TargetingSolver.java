@@ -123,11 +123,6 @@ public class TargetingSolver {
 
     // If no solution found or error too high with constraints, retry without range constraint
     if (solution == null || solution.distanceError > ACCEPTABLE_ERROR) {
-      System.out.println();
-      System.out.println("Could not find a good solution with range constraints.");
-      System.out.println("Retrying without range constraint...");
-      System.out.println();
-
       solution =
           findOptimalTrajectory(
               height,
@@ -143,40 +138,29 @@ public class TargetingSolver {
     }
 
     if (solution == null) {
-      for (int i = 0; i < 10; i++) System.out.println("ERROR ERROR ANSWER NOT FOUND");
-
       // Return NaNs to indicate failure
       timeVelocityAngle[0] = Double.NaN;
       timeVelocityAngle[1] = Double.NaN;
       timeVelocityAngle[2] = Double.NaN;
       return timeVelocityAngle;
-    } else {
-      printSolution(
-          solution,
-          targetDistance,
-          desiredHeightAtTarget,
-          height,
-          rangeStart,
-          rangeEnd,
-          rangeDirection);
-
-      // Build trajectory from the found solution to extract time-to-hit
-      ProjectileTrajectory trajectory =
-          ProjectileTrajectory.createSphere(
-              height,
-              solution.velocity,
-              solution.angle,
-              SPHERE_DIAMETER_INCHES,
-              SPHERE_MASS_LBS,
-              airResistanceEnabled);
-      trajectory.calculateTrajectory();
-
-      timeVelocityAngle[0] = getHeightHitInfo(trajectory); // time
-      timeVelocityAngle[1] = getVelocity(solution); // velocity
-      timeVelocityAngle[2] = getAngle(solution); // angle
-
-      return timeVelocityAngle;
     }
+
+    // Build trajectory from the found solution to extract time-to-hit
+    ProjectileTrajectory trajectory =
+        ProjectileTrajectory.createSphere(
+            height,
+            solution.velocity,
+            solution.angle,
+            SPHERE_DIAMETER_INCHES,
+            SPHERE_MASS_LBS,
+            airResistanceEnabled);
+    trajectory.calculateTrajectory();
+
+    timeVelocityAngle[0] = getHeightHitInfo(trajectory); // time
+    timeVelocityAngle[1] = getVelocity(solution); // velocity
+    timeVelocityAngle[2] = getAngle(solution); // angle
+
+    return timeVelocityAngle;
   }
 
   /**
@@ -206,8 +190,6 @@ public class TargetingSolver {
     TargetingSolution bestSolution = null;
     double smallestError = Double.MAX_VALUE;
     int iterations = 0;
-
-    System.out.println("Starting iterative optimization...");
 
     while (iterations < MAX_ITERATIONS) {
       iterations++;
@@ -271,12 +253,6 @@ public class TargetingSolver {
                 currentVelocity, currentAngle, achievedDistance, achievedHeight, distanceError, 0);
 
         if (error <= ACCEPTABLE_ERROR && iterations >= 100) {
-          System.out.println(
-              "Converged after "
-                  + iterations
-                  + " iterations (error: "
-                  + String.format("%.3f", error)
-                  + " ft)");
           return bestSolution;
         }
       }
@@ -369,12 +345,6 @@ public class TargetingSolver {
 
           if (velocityStep < 0.1 && angleStep < 0.01) {
             // Steps are too small, converged
-            System.out.println(
-                "Converged after "
-                    + iterations
-                    + " iterations (error: "
-                    + String.format("%.3f", smallestError)
-                    + " ft)");
             return bestSolution;
           }
           break;
@@ -391,27 +361,8 @@ public class TargetingSolver {
           currentAngle = Math.max(minAngle, currentAngle - angleStep);
           break;
       }
-
-      if (iterations % 100 == 0) {
-        System.out.println(
-            "Iteration "
-                + iterations
-                + ": Error = "
-                + String.format("%.3f", smallestError)
-                + " ft | Velocity = "
-                + String.format("%.1f", currentVelocity)
-                + " ft/s | Angle = "
-                + String.format("%.1f", currentAngle)
-                + "°");
-      }
     }
 
-    System.out.println(
-        "Reached max iterations ("
-            + MAX_ITERATIONS
-            + "). Final error: "
-            + String.format("%.3f", smallestError)
-            + " ft");
     return bestSolution;
   }
 
@@ -508,72 +459,6 @@ public class TargetingSolver {
 
     // Return the distance at the requested occurrence (1-indexed)
     return pointsAtHeight.get(occurrence - 1).x;
-  }
-
-  /** Print targeting solution. */
-  private static void printSolution(
-      TargetingSolution solution,
-      double targetDistance,
-      Double desiredHeightAtTarget,
-      double height,
-      Double rangeStart,
-      Double rangeEnd,
-      String rangeDirection) {
-    System.out.println("========================================");
-    System.out.println("         TARGETING SOLUTION");
-    System.out.println("========================================");
-    System.out.println();
-    System.out.println("Target Parameters:");
-    System.out.println("  Target Distance: " + String.format("%.2f", targetDistance) + " ft");
-    if (desiredHeightAtTarget != null) {
-      System.out.println(
-          "  Desired Height at Target: "
-              + String.format("%.2f", desiredHeightAtTarget)
-              + " ft (2nd occurrence)");
-    }
-    System.out.println("  Initial Height: " + String.format("%.2f", height) + " ft");
-    if (rangeStart != null && rangeEnd != null && rangeDirection != null) {
-      System.out.println(
-          "  Range Constraint: Between "
-              + String.format("%.2f", rangeStart)
-              + " and "
-              + String.format("%.2f", rangeEnd)
-              + " ft, projectile must be "
-              + rangeDirection.toUpperCase());
-    }
-    System.out.println();
-    System.out.println("Recommended Launch Parameters:");
-    System.out.println("  Launch Velocity: " + String.format("%.2f", solution.velocity) + " ft/s");
-    System.out.println("  Launch Angle: " + String.format("%.2f", solution.angle) + "°");
-    System.out.println();
-    System.out.println("Expected Performance:");
-    System.out.println(
-        "  Achieved Distance: " + String.format("%.2f", solution.achievedDistance) + " ft");
-
-    if (solution.heightConstrained) {
-      System.out.println(
-          "  Achieved Height at Target: " + String.format("%.2f", solution.achievedHeight) + " ft");
-      System.out.println(
-          "  Distance Error: " + String.format("%.2f", solution.distanceError) + " ft");
-      System.out.println("  Height Error: " + String.format("%.2f", solution.heightError) + " ft");
-      System.out.println("  Total Error: " + String.format("%.2f", solution.totalError) + " ft");
-    } else {
-      System.out.println(
-          "  Error: "
-              + String.format("%.2f", solution.distanceError)
-              + " ft ("
-              + String.format("%.2f", (solution.distanceError / targetDistance) * 100)
-              + "%)");
-    }
-
-    if (solution.totalError <= ACCEPTABLE_ERROR) {
-      System.out.println("  Status: ✓ EXCELLENT FIT");
-    } else if (solution.totalError <= ACCEPTABLE_ERROR * 2) {
-      System.out.println("  Status: ✓ GOOD FIT");
-    } else {
-      System.out.println("  Status: ⚠ MODERATE FIT");
-    }
-    System.out.println();
   }
 
   /** return how long it took for fuel to get to the desired location */
