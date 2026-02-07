@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.Rotations;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.CANcoder;
-import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.units.measure.Angle;
 import yams.units.EasyCRT;
 import yams.units.EasyCRTConfig;
@@ -46,12 +45,12 @@ public class TurretAbsolutePosition {
     return absoluteEncoder.getLastIterations();
   }
 
-  @Logged
+  // @Logged
   public double getAbsoluteAngleMain() {
     return turretCANcoderMain.getAbsolutePosition().getValue().in(Degrees);
   }
 
-  @Logged
+  // @Logged
   public double getAbsoluteAngleAux() {
     return turretCANcoderAux.getAbsolutePosition().getValue().in(Degrees);
   }
@@ -87,7 +86,7 @@ public class TurretAbsolutePosition {
     return turretAngle;
   }
 
-  @Logged
+  // @Logged
   public double getAbsoluteAngle2910Style() {
     return calculateAngleFromEncoders(
         turretCANcoderMain.getAbsolutePosition().getValue(),

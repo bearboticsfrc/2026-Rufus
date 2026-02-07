@@ -32,7 +32,7 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 public class TurretController extends SubsystemBase {
 
-  private static final String TURRET_CAMERA = "TurretCamera";
+  private static final String TURRET_CAMERA = "TurretOV9281";
 
   PhotonCamera camera = new PhotonCamera(TURRET_CAMERA);
 
