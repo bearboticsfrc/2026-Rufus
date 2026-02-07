@@ -16,12 +16,15 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.field.AllianceFlipUtil;
 import frc.robot.field.Field;
 import frc.robot.generated.TunerConstants;
@@ -108,6 +111,14 @@ public class RobotContainer implements AllianceReadyListener {
 
     // reset the field-centric heading on left bumper press
     joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+    
+     Trigger onBump = new Trigger (drivetrain::isOnBump);
+
+    onBump.whileTrue(
+        new StartEndCommand(
+            () -> joystick.setRumble(RumbleType.kBothRumble, 1.0),
+            () -> joystick.setRumble(RumbleType.kBothRumble, 0.0)
+            ));
 
     drivetrain.registerTelemetry(logger::telemeterize);
     addTurretTestBindings();
