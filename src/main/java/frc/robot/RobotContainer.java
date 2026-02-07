@@ -190,6 +190,6 @@ public class RobotContainer {
   }
 
   public Rotation2d getHubRotation() {
-    return ((getHub().minus(poseSupplier.get().getTranslation())).getAngle());
+    return (((poseSupplier.get().getTranslation()).minus(getHub()))).getAngle();
   }
 }
