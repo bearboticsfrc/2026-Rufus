@@ -8,7 +8,7 @@ public class TargetingSolver {
 
   private static final double SPHERE_DIAMETER_INCHES = 6;
   private static final double SPHERE_MASS_LBS = 0.5;
-  private static final double DEFAULT_INITIAL_HEIGHT = 2.5; // feet
+  private static final double DEFAULT_INITIAL_HEIGHT = 2; // feet
 
   private static final double MIN_VELOCITY = 10; // ft/s
   private static final double MAX_VELOCITY = 500; // ft/s
@@ -61,7 +61,7 @@ public class TargetingSolver {
   public static double[] solveHubTrajectory(double distance) {
     return solveTrajectory(
         distance,
-        12,
+        6.0,
         0.5 /* potentially an issue that needs to be made positive instead of negative */,
         2.5,
         0.5,
@@ -156,7 +156,7 @@ public class TargetingSolver {
             airResistanceEnabled);
     trajectory.calculateTrajectory();
 
-    timeVelocityAngle[0] = getHeightHitInfo(trajectory); // time
+    timeVelocityAngle[0] = getHeightHitInfo(trajectory, heightAtTarget); // time
     timeVelocityAngle[1] = getVelocity(solution); // velocity
     timeVelocityAngle[2] = getAngle(solution); // angle
 
@@ -462,15 +462,17 @@ public class TargetingSolver {
   }
 
   /** return how long it took for fuel to get to the desired location */
-  private static double getHeightHitInfo(ProjectileTrajectory trajectory) {
-    java.util.List<TrajectoryPoint> hitPoints = trajectory.getPointsAtHeight(6);
-    double[] times = {0, 0};
+  private static double getHeightHitInfo(ProjectileTrajectory trajectory, double targetHeight) {
+    java.util.List<TrajectoryPoint> hitPoints = trajectory.getPointsAtHeight(targetHeight);
 
-    for (int i = 0; i < hitPoints.size(); i++) {
-      TrajectoryPoint point = hitPoints.get(i);
-      times[i] = point.time;
+    if (hitPoints.size() >= 2) {
+      // Return the time of the second occurrence (descending into the target)
+      return hitPoints.get(1).time;
+    } else if (hitPoints.size() == 1) {
+      return hitPoints.get(0).time;
+    } else {
+      return Double.NaN;
     }
-    return times[1];
   }
 
   /** return optimal velocity */

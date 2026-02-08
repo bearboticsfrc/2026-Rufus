@@ -28,6 +28,9 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.TurretYAMS;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+// might be the source of an error
 import java.util.function.Supplier;
 
 @Logged
@@ -85,9 +88,14 @@ public class RobotContainer {
   public void fuelTrajectorySims() {
     double[] solutions = turret.ShootOnMoveSolver("Hub");
 
+    // Create a scheduled executor with a single background thread
+    ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    // // Schedule the launchFuel() to run after .5 seconds
+    // scheduler.schedule(
+    //     () ->
     fuelSim.launchFuel(
-        MetersPerSecond.of(solutions[1] / 3.2808399),
-        Degrees.of(90 - solutions[2]),
+        MetersPerSecond.of(solutions[1] / 3.280839895),
+        Degrees.of(solutions[2]),
         Degrees.of(solutions[3]),
         Meters.of(0.6));
     System.out.println("test");

@@ -325,27 +325,27 @@ public class TurretYAMS extends SubsystemBase {
   // variance
   // Hood will need to be perpindicular to the returned angle
   public double[] getHubTrajectorySolutions() {
-    return TargetingSolver.solveHubTrajectory(getHubDistance() * 3.28);
+    return TargetingSolver.solveHubTrajectory(getHubDistance() * 3.280839895);
   }
 
   public double[] getDepotTrajectorySolutions() {
-    return TargetingSolver.solveGroundTrajectory(getDepotDistance() * 3.28);
+    return TargetingSolver.solveGroundTrajectory(getDepotDistance() * 3.280839895);
   }
 
   public double[] getOutpostTrajectorySolutions() {
-    return TargetingSolver.solveGroundTrajectory(getOutpostDistance() * 3.28);
+    return TargetingSolver.solveGroundTrajectory(getOutpostDistance() * 3.280839895);
   }
 
   public double[] getHubTrajectorySolutions(Pose2d robotPose) {
-    return TargetingSolver.solveHubTrajectory(getHubDistance(robotPose) * 3.28);
+    return TargetingSolver.solveHubTrajectory(getHubDistance(robotPose) * 3.280839895);
   }
 
   public double[] getDepotTrajectorySolutions(Pose2d robotPose) {
-    return TargetingSolver.solveGroundTrajectory(getDepotDistance(robotPose) * 3.28);
+    return TargetingSolver.solveGroundTrajectory(getDepotDistance(robotPose) * 3.280839895);
   }
 
   public double[] getOutpostTrajectorySolutions(Pose2d robotPose) {
-    return TargetingSolver.solveGroundTrajectory(getOutpostDistance(robotPose) * 3.28);
+    return TargetingSolver.solveGroundTrajectory(getOutpostDistance(robotPose) * 3.280839895);
   }
 
   public ChassisSpeeds getChassisSpeeds() {

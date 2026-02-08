@@ -313,7 +313,7 @@ public class FuelSim {
             for (Fuel other : grid[i][j]) {
               if (fuel != other && fuel.pos.getDistance(other.pos) < FUEL_RADIUS * 2) {
                 if (fuel.hashCode() < other.hashCode()) {
-                  handleFuelCollision(fuel, other);
+                  // handleFuelCollision(fuel, other);   //fuel collisions with other fuels
                 }
               }
             }
