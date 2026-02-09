@@ -27,8 +27,9 @@ import frc.robot.field.AllianceFlipUtil;
 import frc.robot.field.Field;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Turret;
+import frc.robot.subsystems.TurretAbsolutePosition;
 import frc.robot.subsystems.TurretController;
-import frc.robot.subsystems.TurretYAMS;
 
 @Logged
 public class RobotContainer implements AllianceReadyListener {
@@ -61,10 +62,14 @@ public class RobotContainer implements AllianceReadyListener {
 
   private final FuelHunt fuelHunt = new FuelHunt(drivetrain);
 
-  public final TurretYAMS turret = new TurretYAMS(() -> drivetrain.getPose());
+  public final Turret turret = new Turret();
 
   public final TurretController turretController =
-      new TurretController(() -> drivetrain.getPose(), value -> turret.setAngle(value));
+      new TurretController(
+          () -> drivetrain.getPose(), value -> turret.moveToAngle(value), () -> turret.getAngle());
+
+  public final TurretAbsolutePosition TurretAbsolutePosition =
+      new frc.robot.subsystems.TurretAbsolutePosition();
 
   /* Path follower */
   private final SendableChooser<Command> autoChooser;
@@ -110,7 +115,7 @@ public class RobotContainer implements AllianceReadyListener {
     // joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
     // reset the field-centric heading on left bumper press
-    joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+    // joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
     drivetrain.registerTelemetry(logger::telemeterize);
     addTurretTestBindings();
@@ -124,7 +129,11 @@ public class RobotContainer implements AllianceReadyListener {
     joystick.b().onTrue(turret.setAngle(Degrees.of(-90)));
     joystick.x().onTrue(turret.setAngle(Degrees.of(90)));
     joystick.y().onTrue(turret.setAngle(Degrees.of(0)));
-    joystick.rightBumper().whileTrue(turret.setAngle(() -> turret.turretRelativeRotation()));
+    joystick.leftBumper().whileTrue(turretController.startTrackingCommand());
+
+    joystick
+        .rightBumper()
+        .whileTrue(turret.setAngle(() -> turretController.getTurretRelativeAngle()));
   }
 
   public void bindPointToHubTrigger() {

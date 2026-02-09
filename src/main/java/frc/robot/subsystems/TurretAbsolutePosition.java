@@ -8,6 +8,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import edu.wpi.first.units.measure.Angle;
 import yams.units.EasyCRT;
 import yams.units.EasyCRTConfig;
+import yams.units.EasyCRTConfig.CrtGearPair;
 
 public class TurretAbsolutePosition {
   CANBus canbus = new CANBus("drive");
@@ -25,9 +26,9 @@ public class TurretAbsolutePosition {
         .withCrtGearRecommendationInputs(93, 1.0)
         .withMechanismRange(Rotations.of(0.0), Rotations.of(1.0))
         .withMatchTolerance(Degrees.of(20))
-        .withAbsoluteEncoder1Inverted(true)
-        .withAbsoluteEncoder2Inverted(false)
-        .withAbsoluteEncoderOffsets(Rotations.of(-.343018), Rotations.of(-.451904));
+        .withAbsoluteEncoder1Inverted(false)
+        .withAbsoluteEncoder2Inverted(true)
+        .withAbsoluteEncoderOffsets(Rotations.of(0), Rotations.of(0));
   }
 
   // @Logged
@@ -91,5 +92,12 @@ public class TurretAbsolutePosition {
     return calculateAngleFromEncoders(
         turretCANcoderMain.getAbsolutePosition().getValue(),
         turretCANcoderAux.getAbsolutePosition().getValue());
+  }
+
+  public static void main(String[] args) {
+
+    CrtGearPair gearPair =
+        EasyCRTConfig.findSmallestCrtGearPair(87, 1.0, Rotations.of(2), 1.2, 20, 50, 20);
+    System.out.println("Pair = " + gearPair);
   }
 }

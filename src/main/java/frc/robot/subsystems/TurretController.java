@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Rotations;
 import static frc.robot.constants.VisionConstants.*;
 
 import edu.wpi.first.epilogue.Logged;
@@ -16,13 +17,18 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
+import frc.robot.field.AllianceFlipUtil;
+import frc.robot.field.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import lombok.*;
 import org.photonvision.PhotonCamera;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
@@ -33,6 +39,9 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 public class TurretController extends SubsystemBase {
 
   private static final String TURRET_CAMERA = "TurretOV9281";
+
+  @Getter public Angle minRotations = Rotations.of(-.45);
+  @Getter public Angle maxRotations = Rotations.of(.45);
 
   PhotonCamera camera = new PhotonCamera(TURRET_CAMERA);
 
@@ -59,6 +68,7 @@ public class TurretController extends SubsystemBase {
   private Supplier<Pose2d> poseSupplier;
 
   private Consumer<Angle> turret;
+  private Supplier<Angle> turretAngle;
 
   // Simulation
   private PhotonCameraSim cameraSim;
@@ -70,9 +80,11 @@ public class TurretController extends SubsystemBase {
           new Translation3d(-.05, 0.1, 0.6),
           new Rotation3d(Degrees.zero(), Degrees.of(-24), Degrees.of(0)));
 
-  public TurretController(Supplier<Pose2d> poseSupplier, Consumer<Angle> turret) {
+  public TurretController(
+      Supplier<Pose2d> poseSupplier, Consumer<Angle> turret, Supplier<Angle> turretAngle) {
     this.poseSupplier = poseSupplier;
     this.turret = turret;
+    this.turretAngle = turretAngle;
     Consumer<DriverStation.Alliance> setHubTags =
         value -> hubTags = (value == DriverStation.Alliance.Red ? redHubTags : blueHubTags);
     DriverStation.getAlliance()
@@ -116,10 +128,19 @@ public class TurretController extends SubsystemBase {
 
   @Override
   public void periodic() {
-    processCameraInput(camera);
+    if (active) {
+      turretAngleRadians = turretAngle.get().in(Radians);
+      processCameraInput(camera);
+    }
   }
 
-  private double turretAngleRadians = 0.0;
+  public Command startTrackingCommand() {
+    return Commands.startEnd(() -> setActive(true), () -> setActive(false), this);
+  }
+
+  @Getter @Setter private boolean active = false;
+
+  @Logged public double turretAngleRadians = 0.0;
 
   private double hubDistance = 0.0;
 
@@ -162,9 +183,19 @@ public class TurretController extends SubsystemBase {
 
       double radiansOffset = Math.atan(hubCenter.getY() / hubCenter.getX());
 
-      turretAngleRadians = turretAngleRadians + radiansOffset;
+      turretAngleRadians =
+          wrapDegreesToSoftLimits(Radians.of(turretAngleRadians + radiansOffset)).in(Radians);
       updateCameraAngle();
     }
+  }
+
+  // constantly gets the angle from the robot to the hub (turret rotation relative to hub)
+  @Logged
+  public Angle getTurretRelativeAngle() {
+    return AllianceFlipUtil.apply(
+            Field.getMyHub().minus(poseSupplier.get().getTranslation()).getAngle())
+        .getMeasure()
+        .minus(AllianceFlipUtil.apply(poseSupplier.get().getRotation()).getMeasure());
   }
 
   @Logged
@@ -232,6 +263,27 @@ public class TurretController extends SubsystemBase {
 
     Translation2d targetPos = turretPose.transformBy(targetTransform).getTranslation();
     return targetPos;
+  }
+
+  private Angle wrapDegreesToSoftLimits(Angle targetAngle) {
+    Angle currentAngle = Radians.of(turretAngleRadians);
+
+    // Solve for integer n such that minRotations <= targetDegrees + 360*n <= maxRotations
+    int nMin = (int) Math.ceil(minRotations.minus(targetAngle).in(Degrees) / 360.0);
+    int nMax = (int) Math.floor(maxRotations.minus(targetAngle).in(Degrees) / 360.0);
+
+    if (nMin <= nMax) {
+      // At least one equivalent fits in soft limits.
+      int nClosest = (int) Math.round((currentAngle.minus(targetAngle).in(Degrees)) / 360.0);
+      int n =
+          Math.max(nMin, Math.min(nClosest, nMax)); // clamp the closest candidate to allowed range
+      return Degrees.of(targetAngle.in(Degrees) + n * 360.0);
+    } else {
+      // No equivalent fits in soft limits -> clamp to nearest soft limit endpoint.
+      double toMin = Math.abs(currentAngle.minus(minRotations).in(Degrees));
+      double toMax = Math.abs(currentAngle.minus(maxRotations).in(Degrees));
+      return (toMin < toMax) ? minRotations : maxRotations;
+    }
   }
 
   // ----- Simulation

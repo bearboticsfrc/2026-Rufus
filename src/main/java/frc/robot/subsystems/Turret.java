@@ -9,9 +9,10 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.networktables.NTSendable;
-import edu.wpi.first.networktables.NTSendableBuilder;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -22,7 +23,7 @@ import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.Setter;
 
-public class Turret extends SubsystemBase implements NTSendable {
+public class Turret extends SubsystemBase implements Sendable {
 
   private final CANBus canivore = new CANBus("drive");
 
@@ -34,11 +35,11 @@ public class Turret extends SubsystemBase implements NTSendable {
   /* Turret config values */
   @Getter private double currentLimit = 44;
   @Getter private double torqueCurrentLimit = 200;
-  @Getter private double velocityKp = 23.221;
-  @Getter private double velocityKi = 0.4; // try lowering this
-  @Getter private double velocityKd = 0.8981;
+  @Getter private double velocityKp = 31.931;
+  @Getter private double velocityKi = 0.0;
+  @Getter private double velocityKd = 1.5432 * 4.0;
 
-  @Getter private double velocityKs = .38778 * 2.0;
+  @Getter private double velocityKs = .38778;
   @Getter private double velocityKv = 2.3767;
   @Getter private double velocityKa = .077265;
 
@@ -52,24 +53,10 @@ public class Turret extends SubsystemBase implements NTSendable {
   private final CachedDouble cachedVelocity;
   private final CachedDouble cachedCurrent;
 
-  //   public TurretConfig() {
-  //     super("Turret", 5, Rio.CANIVORE);
-  //     configPIDGains(0, velocityKp, 0, 0);
-  //     configFeedForwardGains(velocityKs, velocityKv, 0, 0);
-  //     configGearRatio(1);
-  //     configSupplyCurrentLimit(currentLimit, true);
-  //     configStatorCurrentLimit(torqueCurrentLimit, true);
-  //     configForwardTorqueCurrentLimit(torqueCurrentLimit);
-  //     configReverseTorqueCurrentLimit(torqueCurrentLimit);
-  //     configNeutralBrakeMode(true);
-  //     configCounterClockwise_Positive();
-  //     setAttached(true);
-  //   }
-  // }
-
   @Setter @Getter private boolean active;
 
   public Turret() {
+    super("TurretSubsystem");
 
     TalonFXConfiguration config = new TalonFXConfiguration();
 
@@ -86,7 +73,7 @@ public class Turret extends SubsystemBase implements NTSendable {
     config.Slot0.kV = velocityKv;
 
     var motionMagicConfigs = config.MotionMagic;
-    motionMagicConfigs.MotionMagicCruiseVelocity = 80; // Target cruise velocity of 80 rps
+    motionMagicConfigs.MotionMagicCruiseVelocity = 640; // Target cruise velocity of 80 rps
     motionMagicConfigs.MotionMagicAcceleration =
         320; // Target acceleration of 160 rps/s (0.5 seconds)
     motionMagicConfigs.MotionMagicJerk = 1280; // Target jerk of 1600 rps/s/s (0.1 seconds)
@@ -114,6 +101,8 @@ public class Turret extends SubsystemBase implements NTSendable {
       System.out.println("ERROR Configuring Turret motor: " + status);
     }
 
+    SmartDashboard.putData(this);
+
     System.out.println("Turret Subsystem Initialized");
 
     System.out.println("MotionMagic:" + motionMagicVoltage);
@@ -131,12 +120,13 @@ public class Turret extends SubsystemBase implements NTSendable {
   }
 
   @Override
-  public void initSendable(NTSendableBuilder builder) {
+  public void initSendable(SendableBuilder builder) {
+    super.initSendable(builder);
+
     builder.addStringProperty("CurrentCommand", this::getCurrentCommandName, null);
     builder.addDoubleProperty("Motor Voltage", this::getVoltage, null);
     builder.addDoubleProperty("Rotations", this::getPositionRotations, null);
     builder.addDoubleProperty("setPoint", this::getSetpointRotations, null);
-
     builder.addDoubleProperty("Velocity RPM", this::getVelocityRPM, null);
     builder.addDoubleProperty("StatorCurrent", this::getStatorCurrent, null);
   }
@@ -148,6 +138,11 @@ public class Turret extends SubsystemBase implements NTSendable {
     }
 
     return "none";
+  }
+
+  @Logged
+  public Angle getAngle() {
+    return motor.getPosition().getValue();
   }
 
   @Logged
@@ -228,6 +223,10 @@ public class Turret extends SubsystemBase implements NTSendable {
    */
   private double updateVelocityRPS() {
     return motor.getVelocity().getValueAsDouble();
+  }
+
+  public void moveToAngle(Angle angle) {
+    motor.setControl(motionMagicVoltage.withPosition(angle));
   }
 
   public Command setAngle(Angle angle) {
