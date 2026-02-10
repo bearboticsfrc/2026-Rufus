@@ -49,7 +49,7 @@ public class Vision {
       PhotonCamera camera = new PhotonCamera(visionCamera.getName());
 
       PhotonPoseEstimator photonEstimator =
-          new PhotonPoseEstimator(RED_HUB_TAGS_ONLY_LAYOUT, visionCamera.getTransform());
+          new PhotonPoseEstimator(APRIL_TAG_FIELD_LAYOUT, visionCamera.getTransform());
 
       cameras.add(camera);
       photonEstimators.add(photonEstimator);
@@ -59,7 +59,7 @@ public class Vision {
         // Create the vision system simulation which handles cameras and targets on the field.
         visionSim = new VisionSystemSim("main");
         // Add all the AprilTags inside the tag layout as visible targets to this simulated field.
-        visionSim.addAprilTags(RED_HUB_TAGS_ONLY_LAYOUT);
+        visionSim.addAprilTags(APRIL_TAG_FIELD_LAYOUT);
         // Create simulated camera properties. These can be set to mimic your actual camera.
         SimCameraProperties cameraProp = new SimCameraProperties();
         cameraProp.setCalibration(1280, 800, Rotation2d.fromDegrees(70));

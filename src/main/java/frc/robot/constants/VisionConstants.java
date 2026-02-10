@@ -67,4 +67,11 @@ public class VisionConstants {
               .toList(),
           APRIL_TAG_FIELD_LAYOUT.getFieldLength(),
           APRIL_TAG_FIELD_LAYOUT.getFieldWidth());
+  public static final AprilTagFieldLayout BLUE_HUB_TAGS_ONLY_LAYOUT =
+      new AprilTagFieldLayout(
+          APRIL_TAG_FIELD_LAYOUT.getTags().stream()
+              .filter(it -> (it.ID >= 18 && it.ID <= 21 || (it.ID >= 24 && it.ID <= 27)))
+              .toList(),
+          APRIL_TAG_FIELD_LAYOUT.getFieldLength(),
+          APRIL_TAG_FIELD_LAYOUT.getFieldWidth());
 }

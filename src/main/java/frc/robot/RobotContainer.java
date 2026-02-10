@@ -30,6 +30,7 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.TurretAbsolutePosition;
 import frc.robot.subsystems.TurretController;
+import frc.robot.util.HubTracker;
 
 @Logged
 public class RobotContainer implements AllianceReadyListener {
@@ -63,6 +64,8 @@ public class RobotContainer implements AllianceReadyListener {
   private final FuelHunt fuelHunt = new FuelHunt(drivetrain);
 
   public final Turret turret = new Turret();
+
+  public final HubTracker hubTracker = new HubTracker();
 
   public final TurretController turretController =
       new TurretController(

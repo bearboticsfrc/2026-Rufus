@@ -2,12 +2,58 @@ package frc.robot.util;
 
 import static edu.wpi.first.units.Units.Seconds;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import java.util.Optional;
 
 public class HubTracker {
+
+  @Logged
+  public boolean hubStatus() {
+    return isActive();
+  }
+
+  @Logged(name = "Time Left in Active Shift")
+  public double shiftTimeRemaining() {
+    if (!isActive()) return -1;
+    return timeRemainingInCurrentShift().orElse(Seconds.of(-1)).in(Seconds);
+  }
+
+  @Logged(name = "Time Left in Inactive Shift")
+  public double inactiveShiftTimeRemaining() {
+    if (isActive()) return -1;
+    return timeRemainingInCurrentShift().orElse(Seconds.of(-1)).in(Seconds);
+  }
+
+  @Logged(name = "Seconds until inactive")
+  public double timeUntilShiftInactive() {
+    if (!isActive()) {
+      return -1;
+    }
+    if (isActiveNext()) {
+      return timeRemainingInNextShift().orElse(Seconds.of(-1)).in(Seconds);
+    } else {
+      return shiftTimeRemaining();
+    }
+  }
+
+  @Logged(name = "Shift")
+  public String shiftName() {
+    return getCurrentShift().isEmpty() ? "Not Set" : getCurrentShift().get().toString();
+  }
+
+  @Logged(name = "Match Time")
+  public double getMatchTimeDouble() {
+    return getMatchTime();
+  }
+
+  @Logged(name = "Auto Winner")
+  public String getAutoWinnerString() {
+    return getAutoWinner().isPresent() ? getAutoWinner().get().toString() : "Not Set";
+  }
+
   /**
    * Returns an {@link Optional} containing the current {@link Shift}. Will return {@link
    * Optional#empty()} if disabled or in between auto and teleop.
@@ -30,6 +76,10 @@ public class HubTracker {
    */
   public static Optional<Time> timeRemainingInCurrentShift() {
     return getCurrentShift().map((shift) -> Seconds.of(shift.endTime - getMatchTime()));
+  }
+
+  public static Optional<Time> timeRemainingInNextShift() {
+    return getNextShift().map((shift) -> Seconds.of(shift.endTime - getMatchTime()));
   }
 
   /**
@@ -171,7 +221,8 @@ public class HubTracker {
     SHIFT_2(55, 80, ActiveType.AUTO_WINNER),
     SHIFT_3(80, 105, ActiveType.AUTO_LOSER),
     SHIFT_4(105, 130, ActiveType.AUTO_WINNER),
-    ENDGAME(130, 160, ActiveType.BOTH);
+    ENDGAME(130, 160, ActiveType.BOTH),
+    ENDGAME_NULL_PROTECT(160, 160, ActiveType.BOTH);
 
     final int startTime;
     final int endTime;

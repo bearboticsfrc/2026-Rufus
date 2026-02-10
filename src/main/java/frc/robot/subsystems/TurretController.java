@@ -50,13 +50,22 @@ public class TurretController extends SubsystemBase {
           new Translation3d(-.272, 0.172, 0.711),
           new Rotation3d(Degrees.zero(), Degrees.of(-18), Degrees.of(0)));
 
-  public static final Transform3d TAG_10_TO_HUB_CENTER =
-      new Transform3d(new Translation3d(.5842, 0.0, 0.0), new Rotation3d());
-
   static final Map<Integer, Transform3d> tagToHubCenterMap =
-      Map.of(10, new Transform3d(new Translation3d(-.5842, 0.0, 0.0), new Rotation3d()));
+      Map.ofEntries(
+          Map.entry(2, new Transform3d(new Translation3d(-.5842, 0.0, 0.0), new Rotation3d())),
+          Map.entry(5, new Transform3d(new Translation3d(-.5842, 0.0, 0.0), new Rotation3d())),
+          Map.entry(8, new Transform3d(new Translation3d(-.5842, -.3556, 0.0), new Rotation3d())),
+          Map.entry(9, new Transform3d(new Translation3d(-.5842, .3556, 0.0), new Rotation3d())),
+          Map.entry(10, new Transform3d(new Translation3d(-.5842, 0.0, 0.0), new Rotation3d())),
+          Map.entry(11, new Transform3d(new Translation3d(-.5842, .3556, 0.0), new Rotation3d())),
+          Map.entry(18, new Transform3d(new Translation3d(-.5842, 0.0, 0.0), new Rotation3d())),
+          Map.entry(21, new Transform3d(new Translation3d(-.5842, 0.0, 0.0), new Rotation3d())),
+          Map.entry(24, new Transform3d(new Translation3d(-.5842, -.3556, 0.0), new Rotation3d())),
+          Map.entry(25, new Transform3d(new Translation3d(-.5842, .3556, 0.0), new Rotation3d())),
+          Map.entry(26, new Transform3d(new Translation3d(-.5842, 0.0, 0.0), new Rotation3d())),
+          Map.entry(27, new Transform3d(new Translation3d(-.5842, .3556, 0.0), new Rotation3d())));
 
-  static final List<Integer> redHubTags = List.of(10); // , 11, 8, 9, 2, 5);
+  static final List<Integer> redHubTags = List.of(10, 5, 2, 8, 9, 11);
   static final List<Integer> blueHubTags = List.of(26, 27, 24, 25, 18, 21);
 
   static final Map<DriverStation.Alliance, List<Integer>> hubTagsMap =
@@ -100,7 +109,7 @@ public class TurretController extends SubsystemBase {
       // Create the vision system simulation which handles cameras and targets on the field.
       visionSim = new VisionSystemSim("turret");
       // Add all the AprilTags inside the tag layout as visible targets to this simulated field.
-      visionSim.addAprilTags(RED_HUB_TAGS_ONLY_LAYOUT);
+      visionSim.addAprilTags(APRIL_TAG_FIELD_LAYOUT);
       // Create simulated camera properties. These can be set to mimic your actual camera.
       SimCameraProperties cameraProp = new SimCameraProperties();
       cameraProp.setCalibration(1280, 800, Rotation2d.fromDegrees(70));
