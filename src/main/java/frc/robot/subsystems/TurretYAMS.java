@@ -1,5 +1,8 @@
 package frc.robot.subsystems;
 
+import static java.lang.Math.sin;
+import static java.lang.Math.cos;
+
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
@@ -101,6 +104,16 @@ public class TurretYAMS extends SubsystemBase {
   private final Supplier<Pose2d> poseSupplier;
   private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;
 
+
+  
+  @Logged double botVx;
+  @Logged double botVy;
+  @Logged double turretVx;
+  @Logged double turretVy;
+  @Logged double dx;
+  @Logged double dy;
+  @Logged double dTheta;
+  
   /**
    * Predicts the robot's pose after a given time interval for ANY drivetrain.
    *
@@ -109,18 +122,36 @@ public class TurretYAMS extends SubsystemBase {
    * @param deltaTimeSeconds Time into the future to predict
    * @return Predicted future pose
    */
-  public static Pose2d predictFuturePose(
+
+  public Pose2d predictFuturePose(
       Pose2d currentPose, ChassisSpeeds chassisSpeeds, double deltaTimeSeconds) {
     // Calculate change in position over deltaTime
-    double dx = chassisSpeeds.vxMetersPerSecond * deltaTimeSeconds;
-    double dy = chassisSpeeds.vyMetersPerSecond * deltaTimeSeconds;
-    double dTheta = chassisSpeeds.omegaRadiansPerSecond * deltaTimeSeconds;
+    
+    double turretAngularVelocity = chassisSpeeds.omegaRadiansPerSecond * 1.41061531; //finds angular speed
+    Rotation2d botYaw = getBotYaw();
+    
+    botVx = chassisSpeeds.vxMetersPerSecond;
+    botVy = chassisSpeeds.vyMetersPerSecond;
+    turretVx = turretAngularVelocity * cos(botYaw.getRadians());
+    turretVy = turretAngularVelocity * sin(botYaw.getRadians());
+    dx = (botVx + turretVx) * deltaTimeSeconds;
+    dy = (botVy + turretVy) * deltaTimeSeconds;
+    dTheta = chassisSpeeds.omegaRadiansPerSecond * deltaTimeSeconds;
+
+
+
 
     // Create a transform representing the movement
     Transform2d transform = new Transform2d(dx, dy, new Rotation2d(dTheta));
 
+
     // Apply transform to current pose
     return currentPose.plus(transform);
+  }
+
+  public Rotation2d getBotYaw() {
+    Rotation2d robotRotation = poseSupplier.get().getRotation();
+    return robotRotation;
   }
 
   public TurretYAMS(Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> chassisSpeedsSupplier) {

@@ -143,6 +143,7 @@ public class RobotContainer {
     // joystick.x().onTrue(turret.setAngle(oneEightyDegrees));
     // joystick.y().onTrue(turret.setAngle(twoSeventyDegrees));
     joystick.rightBumper().whileTrue(turret.setAngle(() -> turret.turretRelativeRotation()));
+    joystick.a().whileTrue(fuelTrajectoryShotSims());
   }
 
   public Angle ninteyDegrees = Degrees.of(90);
@@ -193,6 +194,16 @@ public class RobotContainer {
   public void simulationPeriodic() {
     // Update drivetrain simulation
     drivetrain.simulationPeriodic();
-    fuelTrajectorySims();
+
+    // fuelTrajectorySims();
+  }
+
+  private Command fuelTrajectoryShotSims() {
+    return new Command() {
+      @Override
+      public void initialize() {
+        fuelTrajectorySims();
+      }
+    };
   }
 }
