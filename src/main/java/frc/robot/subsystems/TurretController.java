@@ -23,6 +23,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.field.AllianceFlipUtil;
 import frc.robot.field.Field;
+import frc.robot.subsystems.turret.TurretAngleCalculator;
+import frc.robot.subsystems.turret.TurretAngleCalculator.ShootingParameters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -205,6 +207,15 @@ public class TurretController extends SubsystemBase {
             Field.getMyHub().minus(poseSupplier.get().getTranslation()).getAngle())
         .getMeasure()
         .minus(AllianceFlipUtil.apply(poseSupplier.get().getRotation()).getMeasure());
+  }
+
+  // constantly gets the angle from the robot to the hub (turret rotation relative to hub)
+  @Logged
+  public Angle getTurretRelativeAngleWithVelocityCompensation() {
+    ShootingParameters params = TurretAngleCalculator.getInstance().getParameters();
+    Rotation2d calculatedTurretAngle = params.turretAngle();
+
+    return calculatedTurretAngle.getMeasure();
   }
 
   @Logged
