@@ -19,6 +19,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
+import frc.robot.RobotState;
+import frc.robot.field.AllianceFlipUtil;
+import frc.robot.field.Field;
+import frc.robot.generated.TunerConstants;
 import frc.spectrumLib.CachedDouble;
 import frc.spectrumLib.util.Conversions;
 import java.util.function.DoubleSupplier;
@@ -31,6 +35,8 @@ public class Turret extends SubsystemBase implements Sendable {
   private final CANBus canivore = new CANBus("drive");
 
   private final TalonFX motor = new TalonFX(30, canivore);
+
+  private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
   PositionVoltage positionVoltage = new PositionVoltage(0).withSlot(0);
   MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
@@ -244,5 +250,18 @@ public class Turret extends SubsystemBase implements Sendable {
   public Command setAngle(Supplier<Angle> angle) {
     return Commands.run(() -> motor.setControl(motionMagicVoltage.withPosition(angle.get())), this)
         .withName(this.getName() + " SetAngleSupplier");
+  }
+
+  public Command setDefaultAngle() {
+    return setAngle(
+        () ->
+            AllianceFlipUtil.apply(
+                    Field.getMyHub()
+                        .minus(RobotState.getInstance().getRobotPose().getTranslation())
+                        .getAngle())
+                .getMeasure()
+                .minus(
+                    AllianceFlipUtil.apply(RobotState.getInstance().getRobotPose().getRotation())
+                        .getMeasure()));
   }
 }

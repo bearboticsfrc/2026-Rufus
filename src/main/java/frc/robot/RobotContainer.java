@@ -81,10 +81,15 @@ public class RobotContainer implements AllianceReadyListener {
     autoChooser = AutoBuilder.buildAutoChooser("SimpleAuto");
     SmartDashboard.putData("Auto Mode", autoChooser);
 
+    configureDefaultCommands();
     configureBindings();
     // Warmup PathPlanner to avoid Java pauses
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     AllianceColor.addListener(this);
+  }
+
+  private void configureDefaultCommands() {
+    turret.setDefaultCommand(turret.setDefaultAngle());
   }
 
   private void configureBindings() {
@@ -128,15 +133,13 @@ public class RobotContainer implements AllianceReadyListener {
   }
 
   private void addTurretTestBindings() {
-    joystick.a().onTrue(turret.setAngle(Degrees.of(180)));
-    joystick.b().onTrue(turret.setAngle(Degrees.of(-90)));
-    joystick.x().onTrue(turret.setAngle(Degrees.of(90)));
-    joystick.y().onTrue(turret.setAngle(Degrees.of(0)));
+    joystick.a().whileTrue(turret.setAngle(Degrees.of(180)));
+    joystick.b().whileTrue(turret.setAngle(Degrees.of(-90)));
+    joystick.x().whileTrue(turret.setAngle(Degrees.of(90)));
+    joystick.y().whileTrue(turret.setAngle(Degrees.of(0)));
     joystick.leftBumper().whileTrue(turretController.startTrackingCommand());
 
-    joystick
-        .rightBumper()
-        .whileTrue(turret.setAngle(() -> turretController.getTurretRelativeAngle()));
+    joystick.rightBumper().whileTrue(turret.setDefaultAngle());
   }
 
   public void bindPointToHubTrigger() {
