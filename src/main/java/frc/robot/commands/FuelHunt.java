@@ -1,3 +1,4 @@
+
 package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
@@ -10,6 +11,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+
+import java.util.ArrayList;
 import java.util.List;
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
@@ -35,6 +38,8 @@ public void setPreferredSide(TargetSide side) {
 
   private final CommandSwerveDrivetrain driveSubsystem;
   private final PhotonCamera camera = new PhotonCamera("Fuel_OV9782");
+  private final PhotonCamera camera2 = new PhotonCamera("camera2");
+  private final PhotonCamera camera3 = new PhotonCamera("camera3");
   private final PIDController rotSpeedController = new PIDController(0.02, 0, 0);
   private final PIDController xSpeedController = new PIDController(0.1, 0, 0);
 
@@ -56,18 +61,33 @@ public void setPreferredSide(TargetSide side) {
 
   @Override
   public void execute() {
-    List<PhotonPipelineResult> results = camera.getAllUnreadResults();
-    if (results.isEmpty()) {
-      driveSubsystem.setControl(new SwerveRequest.Idle());
-      return;
-    }
-    PhotonPipelineResult result = results.get(results.size() - 1);
-    if (!result.hasTargets()) {
+  List<PhotonPipelineResult> results1 = camera.getAllUnreadResults(); 
+  List<PhotonPipelineResult> results2 = camera2.getAllUnreadResults(); 
+  List<PhotonPipelineResult> results3 = camera3.getAllUnreadResults();
+
+    List<PhotonPipelineResult> allResults = new ArrayList<>();
+      allResults.addAll(results1);
+      allResults.addAll(results2);
+      allResults.addAll(results3);
+
+    if (allResults.isEmpty()) {
       driveSubsystem.setControl(new SwerveRequest.Idle());
       return;
     }
 
-    PhotonTrackedTarget target = result.getBestTarget();
+    PhotonPipelineResult latestWithTarget = null;
+    
+    for (PhotonPipelineResult r : allResults) { 
+      if (r.hasTargets()) 
+      { latestWithTarget = r; } 
+    }
+
+    if (latestWithTarget == null) { 
+      driveSubsystem.setControl(new SwerveRequest.Idle()); 
+      return; 
+    }
+
+    PhotonTrackedTarget target = latestWithTarget.getBestTarget(); 
 
     double targetX = target.getPitch();
     double targetY = target.getYaw();
