@@ -1,8 +1,5 @@
 package frc.robot.subsystems;
 
-import static java.lang.Math.sin;
-import static java.lang.Math.cos;
-
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
@@ -13,6 +10,8 @@ import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.SignalLogger;
@@ -104,8 +103,6 @@ public class TurretYAMS extends SubsystemBase {
   private final Supplier<Pose2d> poseSupplier;
   private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;
 
-
-  
   @Logged double botVx;
   @Logged double botVy;
   @Logged double turretVx;
@@ -113,7 +110,7 @@ public class TurretYAMS extends SubsystemBase {
   @Logged double dx;
   @Logged double dy;
   @Logged double dTheta;
-  
+
   /**
    * Predicts the robot's pose after a given time interval for ANY drivetrain.
    *
@@ -122,28 +119,27 @@ public class TurretYAMS extends SubsystemBase {
    * @param deltaTimeSeconds Time into the future to predict
    * @return Predicted future pose
    */
-
   public Pose2d predictFuturePose(
       Pose2d currentPose, ChassisSpeeds chassisSpeeds, double deltaTimeSeconds) {
     // Calculate change in position over deltaTime
-    
-    double turretAngularVelocity = chassisSpeeds.omegaRadiansPerSecond * 1.41061531; //finds angular speed
+
+    double turretAngularVelocity =
+        chassisSpeeds.omegaRadiansPerSecond * 1.41061531; // finds angular speed
     Rotation2d botYaw = getBotYaw();
-    
-    botVx = chassisSpeeds.vxMetersPerSecond;
-    botVy = chassisSpeeds.vyMetersPerSecond;
-    turretVx = turretAngularVelocity * cos(botYaw.getRadians());
-    turretVy = turretAngularVelocity * sin(botYaw.getRadians());
+
+    botVx = chassisSpeeds.vxMetersPerSecond; // velocity of the robot in the y direction
+    botVy = chassisSpeeds.vyMetersPerSecond; // velocity of the robot in the x direction
+    turretVx = turretAngularVelocity * cos(botYaw.getRadians() - (3 / 4 * Math.PI));
+    // finds velocity of the turret in the y direction
+    turretVy = turretAngularVelocity * sin(botYaw.getRadians() - (3 / 4 * Math.PI));
+    // finds velocity of the turret in the x direction
     dx = (botVx + turretVx) * deltaTimeSeconds;
     dy = (botVy + turretVy) * deltaTimeSeconds;
+
     dTheta = chassisSpeeds.omegaRadiansPerSecond * deltaTimeSeconds;
-
-
-
 
     // Create a transform representing the movement
     Transform2d transform = new Transform2d(dx, dy, new Rotation2d(dTheta));
-
 
     // Apply transform to current pose
     return currentPose.plus(transform);

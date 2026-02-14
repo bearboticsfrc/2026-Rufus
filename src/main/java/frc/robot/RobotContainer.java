@@ -177,18 +177,10 @@ public class RobotContainer {
 
     fuelSim.setSubticks(
         5); // sets the number of physics iterations to perform per 20ms loop. Default = 5
-    fuelSim.spawnStartingFuel(); // spawns fuel in the depots and neutral zone
-    // fuelSim.stop(); // stops the simulation running (updateSim will do nothing until start is
-    // called
     fuelSim.start(); // enables the simulation to run (updateSim must still be called periodically)
     // again)
     fuelSim.enableAirResistance(); // an additional drag force will be applied to fuel in physics
     // update step
-
-    //   Pose2d startingPose =
-    //       FlippingUtil.flipFieldPose(((PathPlannerAuto)
-    // autoChooser.getSelected()).getStartingPose());
-    //   drivetrain.resetPose(startingPose);
   }
 
   public void simulationPeriodic() {
