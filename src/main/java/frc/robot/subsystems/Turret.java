@@ -126,6 +126,7 @@ public class Turret extends SubsystemBase implements Sendable {
     updateVelocityRPM();
     updateVelocityRPS();
     updateVoltage();
+    getDefaultAngle();
   }
 
   @Override
@@ -252,16 +253,15 @@ public class Turret extends SubsystemBase implements Sendable {
         .withName(this.getName() + " SetAngleSupplier");
   }
 
-  public Command setDefaultAngle() {
-    return setAngle(
-        () ->
-            AllianceFlipUtil.apply(
-                    Field.getMyHub()
-                        .minus(RobotState.getInstance().getRobotPose().getTranslation())
-                        .getAngle())
-                .getMeasure()
-                .minus(
-                    AllianceFlipUtil.apply(RobotState.getInstance().getRobotPose().getRotation())
-                        .getMeasure()));
+  // default angle fot turret
+  public Angle getDefaultAngle() {
+    return (AllianceFlipUtil.apply(
+            Field.getMyHub()
+                .minus(RobotState.getInstance().getRobotPose().getTranslation())
+                .getAngle())
+        .getMeasure()
+        .minus(
+            AllianceFlipUtil.apply(RobotState.getInstance().getRobotPose().getRotation())
+                .getMeasure()));
   }
 }

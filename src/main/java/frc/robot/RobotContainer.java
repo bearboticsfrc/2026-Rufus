@@ -59,6 +59,8 @@ public class RobotContainer implements AllianceReadyListener {
 
   private final CommandXboxController joystick = new CommandXboxController(0);
 
+  private final CommandXboxController operator = new CommandXboxController(1);
+
   public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
   private final FuelHunt fuelHunt = new FuelHunt(drivetrain);
@@ -89,7 +91,7 @@ public class RobotContainer implements AllianceReadyListener {
   }
 
   private void configureDefaultCommands() {
-    turret.setDefaultCommand(turret.setDefaultAngle());
+    turret.setDefaultCommand(turret.setAngle(() -> turret.getDefaultAngle()));
   }
 
   private void configureBindings() {
@@ -133,17 +135,40 @@ public class RobotContainer implements AllianceReadyListener {
   }
 
   private void addTurretTestBindings() {
-    joystick.a().whileTrue(turret.setAngle(Degrees.of(180)));
-    joystick.b().whileTrue(turret.setAngle(Degrees.of(-90)));
-    joystick.x().whileTrue(turret.setAngle(Degrees.of(90)));
-    joystick.y().whileTrue(turret.setAngle(Degrees.of(0)));
-    joystick.leftBumper().whileTrue(turretController.startTrackingCommand());
+    operator
+        .a()
+        .whileTrue(
+            turret.setAngle(
+                () -> (Degrees.of(0)).minus(drivetrain.getPose().getRotation().getMeasure())));
+    operator
+        .b()
+        .whileTrue(
+            turret.setAngle(
+                () -> (Degrees.of(90)).minus(drivetrain.getPose().getRotation().getMeasure())));
+    operator
+        .x()
+        .whileTrue(
+            turret.setAngle(
+                () -> (Degrees.of(-90)).minus(drivetrain.getPose().getRotation().getMeasure())));
+    operator
+        .y()
+        .whileTrue(
+            turret.setAngle(
+                () -> (Degrees.of(180)).minus(drivetrain.getPose().getRotation().getMeasure())));
 
-    joystick.rightBumper().whileTrue(turret.setDefaultAngle());
+    operator.leftBumper().whileTrue(turretController.startTrackingCommand());
+
+    operator
+        .rightTrigger()
+        .whileTrue(
+            turret.setAngle(
+                () ->
+                    Radians.of((Math.atan2(operator.getRightX(), operator.getRightY())))
+                        .minus(drivetrain.getPose().getRotation().getMeasure())));
   }
 
   public void bindPointToHubTrigger() {
-    joystick
+    operator
         .leftTrigger()
         .whileTrue(
             drivetrain.applyRequest(
