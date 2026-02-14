@@ -1,4 +1,3 @@
-
 package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
@@ -11,7 +10,6 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-
 import java.util.ArrayList;
 import java.util.List;
 import org.photonvision.PhotonCamera;
@@ -20,14 +18,18 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 public class FuelHunt extends Command {
 
-public enum TargetSide { LEFT, RIGHT, BOTH }
+  public enum TargetSide {
+    LEFT,
+    RIGHT,
+    BOTH
+  }
 
-private TargetSide preferredSide = TargetSide.BOTH;
+  private TargetSide preferredSide = TargetSide.BOTH;
 
-/** Call to set the side to focus on. Default is BOTH. */
-public void setPreferredSide(TargetSide side) {
-  this.preferredSide = side;
-}
+  /** Call to set the side to focus on. Default is BOTH. */
+  public void setPreferredSide(TargetSide side) {
+    this.preferredSide = side;
+  }
 
   private double MaxSpeed =
       TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) / 4; // kSpeedAt12Volts desired top speed
@@ -39,7 +41,6 @@ public void setPreferredSide(TargetSide side) {
   private final CommandSwerveDrivetrain driveSubsystem;
   private final PhotonCamera centerCamera = new PhotonCamera("Fuel_OV9782_Center");
   private final PhotonCamera rightCamera = new PhotonCamera("Fuel_OV9782_Right");
-  private final PhotonCamera leftCamera = new PhotonCamera("Fuel_OV9782_Left");
   private final PIDController rotSpeedController = new PIDController(0.02, 0, 0);
   private final PIDController xSpeedController = new PIDController(0.1, 0, 0);
 
@@ -59,35 +60,46 @@ public void setPreferredSide(TargetSide side) {
   @Override
   public void initialize() {}
 
+  private double offset = 60.0;
+
   @Override
   public void execute() {
-  List<PhotonPipelineResult> results1 = centerCamera.getAllUnreadResults(); 
-  List<PhotonPipelineResult> results2 = rightCamera.getAllUnreadResults(); 
-  List<PhotonPipelineResult> results3 = leftCamera.getAllUnreadResults();
+    List<PhotonTrackedTarget> allTargets = new ArrayList<>();
+    List<PhotonPipelineResult> results1 = centerCamera.getAllUnreadResults();
+    List<PhotonPipelineResult> results2 = rightCamera.getAllUnreadResults();
+    if (!results2.isEmpty()) {
 
-    List<PhotonPipelineResult> allResults = new ArrayList<>();
-      allResults.addAll(results1);
-      allResults.addAll(results2);
-      allResults.addAll(results3);
+      PhotonPipelineResult rightResult = results2.get(results2.size() - 1);
 
-    if (allResults.isEmpty()) {
+      for (PhotonTrackedTarget target : rightResult.getTargets()) {
+        PhotonTrackedTarget newTarget =
+            new PhotonTrackedTarget(
+                target.getYaw() + offset,
+                target.getPitch(),
+                target.getArea(),
+                target.getSkew(),
+                target.getFiducialId(),
+                target.getDetectedObjectClassID(),
+                target.getDetectedObjectConfidence(),
+                target.getBestCameraToTarget(),
+                target.getAlternateCameraToTarget(),
+                target.getPoseAmbiguity(),
+                target.getMinAreaRectCorners(),
+                target.getDetectedCorners());
+        allTargets.add(newTarget);
+      }
+    }
+
+    if (!results1.isEmpty()) {
+      PhotonPipelineResult centerResult = results1.get(results1.size() - 1);
+      allTargets.addAll(centerResult.getTargets());
+    }
+    if (allTargets.isEmpty()) {
       driveSubsystem.setControl(new SwerveRequest.Idle());
       return;
     }
 
-    PhotonPipelineResult latestWithTarget = null;
-    
-    for (PhotonPipelineResult r : allResults) { 
-      if (r.hasTargets()) 
-      { latestWithTarget = r; } 
-    }
-
-    if (latestWithTarget == null) { 
-      driveSubsystem.setControl(new SwerveRequest.Idle()); 
-      return; 
-    }
-
-    PhotonTrackedTarget target = latestWithTarget.getBestTarget(); 
+    PhotonTrackedTarget target = getMostTargets(allTargets);
 
     double targetX = target.getPitch();
     double targetY = target.getYaw();
@@ -98,6 +110,48 @@ public void setPreferredSide(TargetSide side) {
     double rot = rotSpeedController.calculate(targetY, 0);
 
     drive(xSpeed, 0.0, rot);
+  }
+
+  public PhotonTrackedTarget getPreferredTarget(List<PhotonTrackedTarget> results) {
+    double closestPitch = 99;
+    PhotonTrackedTarget bestTarget = null;
+    for (PhotonTrackedTarget target : results) {
+      if (target.getPitch() < closestPitch) {
+        closestPitch = target.getPitch();
+        bestTarget = target;
+      }
+    }
+    return bestTarget;
+  }
+
+  public PhotonTrackedTarget getMostTargets(List<PhotonTrackedTarget> results) {
+    double closestPitch = 99;
+    int leftCount = 0;
+    int rightCount = 0;
+    PhotonTrackedTarget bestTarget = null;
+    for (PhotonTrackedTarget target : results) {
+      if (target.getYaw() > 30) {
+        rightCount++;
+      } else {
+        leftCount++;
+      }
+    }
+    if (rightCount > leftCount) {
+      for (PhotonTrackedTarget target : results) {
+        if (target.getPitch() < closestPitch && target.getYaw() > 30) {
+          closestPitch = target.getPitch();
+          bestTarget = target;
+        }
+      }
+    } else {
+      for (PhotonTrackedTarget target : results) {
+        if (target.getPitch() < closestPitch && target.getYaw() <= 30) {
+          closestPitch = target.getPitch();
+          bestTarget = target;
+        }
+      }
+    }
+    return bestTarget;
   }
 
   @Override
