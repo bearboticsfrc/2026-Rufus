@@ -37,9 +37,9 @@ public void setPreferredSide(TargetSide side) {
           .in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
   private final CommandSwerveDrivetrain driveSubsystem;
-  private final PhotonCamera camera = new PhotonCamera("Fuel_OV9782");
-  private final PhotonCamera camera2 = new PhotonCamera("camera2");
-  private final PhotonCamera camera3 = new PhotonCamera("camera3");
+  private final PhotonCamera centerCamera = new PhotonCamera("Fuel_OV9782_Center");
+  private final PhotonCamera rightCamera = new PhotonCamera("Fuel_OV9782_Right");
+  private final PhotonCamera leftCamera = new PhotonCamera("Fuel_OV9782_Left");
   private final PIDController rotSpeedController = new PIDController(0.02, 0, 0);
   private final PIDController xSpeedController = new PIDController(0.1, 0, 0);
 
@@ -61,9 +61,9 @@ public void setPreferredSide(TargetSide side) {
 
   @Override
   public void execute() {
-  List<PhotonPipelineResult> results1 = camera.getAllUnreadResults(); 
-  List<PhotonPipelineResult> results2 = camera2.getAllUnreadResults(); 
-  List<PhotonPipelineResult> results3 = camera3.getAllUnreadResults();
+  List<PhotonPipelineResult> results1 = centerCamera.getAllUnreadResults(); 
+  List<PhotonPipelineResult> results2 = rightCamera.getAllUnreadResults(); 
+  List<PhotonPipelineResult> results3 = leftCamera.getAllUnreadResults();
 
     List<PhotonPipelineResult> allResults = new ArrayList<>();
       allResults.addAll(results1);
