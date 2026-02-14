@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Rotations;
 
 import com.ctre.phoenix6.CANBus;
@@ -27,8 +28,7 @@ import frc.spectrumLib.CachedDouble;
 import frc.spectrumLib.util.Conversions;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 public class Turret extends SubsystemBase implements Sendable {
 
@@ -37,6 +37,9 @@ public class Turret extends SubsystemBase implements Sendable {
   private final TalonFX motor = new TalonFX(30, canivore);
 
   private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+
+  @Getter public Angle minRotations = Rotations.of(-.45);
+  @Getter public Angle maxRotations = Rotations.of(.45);
 
   PositionVoltage positionVoltage = new PositionVoltage(0).withSlot(0);
   MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
@@ -100,6 +103,8 @@ public class Turret extends SubsystemBase implements Sendable {
       status = motor.getConfigurator().apply(config);
     }
 
+    motor.setPosition(0);
+
     cachedCurrent = new CachedDouble(this::updateCurrent);
     cachedVoltage = new CachedDouble(this::updateVoltage);
     cachedRotations = new CachedDouble(this::updatePositionRotations);
@@ -117,6 +122,27 @@ public class Turret extends SubsystemBase implements Sendable {
     System.out.println("MotionMagic:" + motionMagicVoltage);
   }
 
+  private Angle wrapDegreesToSoftLimits(Angle targetAngle) {
+    Angle currentAngle = getAngle();
+
+    // Solve for integer n such that minRotations <= targetDegrees + 360*n <= maxRotations
+    int nMin = (int) Math.ceil(minRotations.minus(targetAngle).in(Degrees) / 360.0);
+    int nMax = (int) Math.floor(maxRotations.minus(targetAngle).in(Degrees) / 360.0);
+
+    if (nMin <= nMax) {
+      // At least one equivalent fits in soft limits.
+      int nClosest = (int) Math.round((currentAngle.minus(targetAngle).in(Degrees)) / 360.0);
+      int n =
+          Math.max(nMin, Math.min(nClosest, nMax)); // clamp the closest candidate to allowed range
+      return Degrees.of(targetAngle.in(Degrees) + n * 360.0);
+    } else {
+      // No equivalent fits in soft limits -> clamp to nearest soft limit endpoint.
+      double toMin = Math.abs(currentAngle.minus(minRotations).in(Degrees));
+      double toMax = Math.abs(currentAngle.minus(maxRotations).in(Degrees));
+      return (toMin < toMax) ? minRotations : maxRotations;
+    }
+  }
+
   @Override
   public void periodic() {
     if (isActive()) {}
@@ -126,7 +152,6 @@ public class Turret extends SubsystemBase implements Sendable {
     updateVelocityRPM();
     updateVelocityRPS();
     updateVoltage();
-    getDefaultAngle();
   }
 
   @Override
@@ -240,16 +265,22 @@ public class Turret extends SubsystemBase implements Sendable {
   }
 
   public void moveToAngle(Angle angle) {
-    motor.setControl(motionMagicVoltage.withPosition(angle));
+    motor.setControl(motionMagicVoltage.withPosition(wrapDegreesToSoftLimits(angle)));
   }
 
   public Command setAngle(Angle angle) {
-    return Commands.run(() -> motor.setControl(motionMagicVoltage.withPosition(angle)), this)
+    return Commands.run(
+            () -> motor.setControl(motionMagicVoltage.withPosition(wrapDegreesToSoftLimits(angle))),
+            this)
         .withName(this.getName() + " SetAngle");
   }
 
   public Command setAngle(Supplier<Angle> angle) {
-    return Commands.run(() -> motor.setControl(motionMagicVoltage.withPosition(angle.get())), this)
+    return Commands.run(
+            () ->
+                motor.setControl(
+                    motionMagicVoltage.withPosition(wrapDegreesToSoftLimits(angle.get()))),
+            this)
         .withName(this.getName() + " SetAngleSupplier");
   }
 
@@ -257,6 +288,28 @@ public class Turret extends SubsystemBase implements Sendable {
   public Angle getDefaultAngle() {
     return (AllianceFlipUtil.apply(
             Field.getMyHub()
+                .minus(RobotState.getInstance().getRobotPose().getTranslation())
+                .getAngle())
+        .getMeasure()
+        .minus(
+            AllianceFlipUtil.apply(RobotState.getInstance().getRobotPose().getRotation())
+                .getMeasure()));
+  }
+
+  public Angle getOutpostAngle() {
+    return (AllianceFlipUtil.apply(
+            Field.getMyOutpost()
+                .minus(RobotState.getInstance().getRobotPose().getTranslation())
+                .getAngle())
+        .getMeasure()
+        .minus(
+            AllianceFlipUtil.apply(RobotState.getInstance().getRobotPose().getRotation())
+                .getMeasure()));
+  }
+
+  public Angle getLeftAngle() {
+    return (AllianceFlipUtil.apply(
+            Field.getMyLeft()
                 .minus(RobotState.getInstance().getRobotPose().getTranslation())
                 .getAngle())
         .getMeasure()

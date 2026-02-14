@@ -156,7 +156,9 @@ public class RobotContainer implements AllianceReadyListener {
             turret.setAngle(
                 () -> (Degrees.of(180)).minus(drivetrain.getPose().getRotation().getMeasure())));
 
-    operator.leftBumper().whileTrue(turretController.startTrackingCommand());
+    // operator.leftBumper().whileTrue(turretController.startTrackingCommand());
+    operator.leftBumper().whileTrue(turret.setAngle(() -> turret.getLeftAngle()));
+    operator.rightBumper().whileTrue(turret.setAngle(() -> turret.getOutpostAngle()));
 
     operator
         .rightTrigger()
