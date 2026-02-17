@@ -12,6 +12,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -22,7 +23,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.RobotState;
 import frc.robot.field.AllianceFlipUtil;
-import frc.robot.field.Field;
 import frc.robot.generated.TunerConstants;
 import frc.spectrumLib.CachedDouble;
 import frc.spectrumLib.util.Conversions;
@@ -284,34 +284,10 @@ public class Turret extends SubsystemBase implements Sendable {
         .withName(this.getName() + " SetAngleSupplier");
   }
 
-  // default angle fot turret
-  public Angle getDefaultAngle() {
+  // set angle for turret relative to field element
+  public Angle getAngleTo(Translation2d position) {
     return (AllianceFlipUtil.apply(
-            Field.getMyHub()
-                .minus(RobotState.getInstance().getRobotPose().getTranslation())
-                .getAngle())
-        .getMeasure()
-        .minus(
-            AllianceFlipUtil.apply(RobotState.getInstance().getRobotPose().getRotation())
-                .getMeasure()));
-  }
-
-  public Angle getOutpostAngle() {
-    return (AllianceFlipUtil.apply(
-            Field.getMyOutpost()
-                .minus(RobotState.getInstance().getRobotPose().getTranslation())
-                .getAngle())
-        .getMeasure()
-        .minus(
-            AllianceFlipUtil.apply(RobotState.getInstance().getRobotPose().getRotation())
-                .getMeasure()));
-  }
-
-  public Angle getLeftAngle() {
-    return (AllianceFlipUtil.apply(
-            Field.getMyLeft()
-                .minus(RobotState.getInstance().getRobotPose().getTranslation())
-                .getAngle())
+            position.minus(RobotState.getInstance().getRobotPose().getTranslation()).getAngle())
         .getMeasure()
         .minus(
             AllianceFlipUtil.apply(RobotState.getInstance().getRobotPose().getRotation())

@@ -91,7 +91,7 @@ public class RobotContainer implements AllianceReadyListener {
   }
 
   private void configureDefaultCommands() {
-    turret.setDefaultCommand(turret.setAngle(() -> turret.getDefaultAngle()));
+    turret.setDefaultCommand(turret.setAngle(() -> turret.getAngleTo(Field.getMyHub())));
   }
 
   private void configureBindings() {
@@ -157,8 +157,10 @@ public class RobotContainer implements AllianceReadyListener {
                 () -> (Degrees.of(180)).minus(drivetrain.getPose().getRotation().getMeasure())));
 
     // operator.leftBumper().whileTrue(turretController.startTrackingCommand());
-    operator.leftBumper().whileTrue(turret.setAngle(() -> turret.getLeftAngle()));
-    operator.rightBumper().whileTrue(turret.setAngle(() -> turret.getOutpostAngle()));
+    operator.leftBumper().whileTrue(turret.setAngle(() -> turret.getAngleTo(Field.getMyLeft())));
+    operator
+        .rightBumper()
+        .whileTrue(turret.setAngle(() -> turret.getAngleTo(Field.getMyOutpost())));
 
     operator
         .rightTrigger()
