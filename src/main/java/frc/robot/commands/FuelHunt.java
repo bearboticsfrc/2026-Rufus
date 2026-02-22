@@ -41,6 +41,7 @@ public class FuelHunt extends Command {
   private final CommandSwerveDrivetrain driveSubsystem;
   private final PhotonCamera centerCamera = new PhotonCamera("Fuel_OV9782_Center");
   private final PhotonCamera rightCamera = new PhotonCamera("Fuel_OV9782_Right");
+  private final PhotonCamera leftCamera = new PhotonCamera("Fuel_OV9782_Left");
   private final PIDController rotSpeedController = new PIDController(0.02, 0, 0);
   private final PIDController xSpeedController = new PIDController(0.1, 0, 0);
 
@@ -67,6 +68,7 @@ public class FuelHunt extends Command {
     List<PhotonTrackedTarget> allTargets = new ArrayList<>();
     List<PhotonPipelineResult> results1 = centerCamera.getAllUnreadResults();
     List<PhotonPipelineResult> results2 = rightCamera.getAllUnreadResults();
+    List<PhotonPipelineResult> results3 = leftCamera.getAllUnreadResults();
     if (!results2.isEmpty()) {
 
       PhotonPipelineResult rightResult = results2.get(results2.size() - 1);
@@ -88,28 +90,51 @@ public class FuelHunt extends Command {
                 target.getDetectedCorners());
         allTargets.add(newTarget);
       }
+
+      if (!results3.isEmpty()) {
+
+        PhotonPipelineResult leftResult = results3.get(results3.size() - 1);
+
+        for (PhotonTrackedTarget target : leftResult.getTargets()) {
+          PhotonTrackedTarget newTarget =
+              new PhotonTrackedTarget(
+                  target.getYaw() - offset,
+                  target.getPitch(),
+                  target.getArea(),
+                  target.getSkew(),
+                  target.getFiducialId(),
+                  target.getDetectedObjectClassID(),
+                  target.getDetectedObjectConfidence(),
+                  target.getBestCameraToTarget(),
+                  target.getAlternateCameraToTarget(),
+                  target.getPoseAmbiguity(),
+                  target.getMinAreaRectCorners(),
+                  target.getDetectedCorners());
+          allTargets.add(newTarget);
+        }
+      }
+
+      if (!results1.isEmpty()) {
+        PhotonPipelineResult centerResult = results1.get(results1.size() - 1);
+        allTargets.addAll(centerResult.getTargets());
+      }
+      if (allTargets.isEmpty()) {
+        driveSubsystem.setControl(new SwerveRequest.Idle());
+        return;
+      }
+
+      PhotonTrackedTarget target = getMostTargets(allTargets);
+
+      double targetX = target.getPitch();
+      double targetY = target.getYaw();
+
+      if (targetX < 6) targetX = 0;
+
+      double xSpeed = xSpeedController.calculate(targetX, 0);
+      double rot = rotSpeedController.calculate(targetY, 0);
+
+      drive(xSpeed, 0.0, rot);
     }
-
-    if (!results1.isEmpty()) {
-      PhotonPipelineResult centerResult = results1.get(results1.size() - 1);
-      allTargets.addAll(centerResult.getTargets());
-    }
-    if (allTargets.isEmpty()) {
-      driveSubsystem.setControl(new SwerveRequest.Idle());
-      return;
-    }
-
-    PhotonTrackedTarget target = getMostTargets(allTargets);
-
-    double targetX = target.getPitch();
-    double targetY = target.getYaw();
-
-    if (targetX < 6) targetX = 0;
-
-    double xSpeed = xSpeedController.calculate(targetX, 0);
-    double rot = rotSpeedController.calculate(targetY, 0);
-
-    drive(xSpeed, 0.0, rot);
   }
 
   public PhotonTrackedTarget getPreferredTarget(List<PhotonTrackedTarget> results) {
@@ -127,25 +152,35 @@ public class FuelHunt extends Command {
   public PhotonTrackedTarget getMostTargets(List<PhotonTrackedTarget> results) {
     double closestPitch = 99;
     int leftCount = 0;
+    int centerCount = 0;
     int rightCount = 0;
     PhotonTrackedTarget bestTarget = null;
     for (PhotonTrackedTarget target : results) {
       if (target.getYaw() > 30) {
         rightCount++;
-      } else {
+      } else if (target.getYaw() < -30) {
         leftCount++;
+      } else {
+        centerCount++;
       }
     }
-    if (rightCount > leftCount) {
+    if (rightCount > centerCount && rightCount > leftCount) {
       for (PhotonTrackedTarget target : results) {
         if (target.getPitch() < closestPitch && target.getYaw() > 30) {
           closestPitch = target.getPitch();
           bestTarget = target;
         }
       }
+    } else if (centerCount < leftCount) {
+      for (PhotonTrackedTarget target : results) {
+        if (target.getPitch() < closestPitch && target.getYaw() < -30) {
+          closestPitch = target.getPitch();
+          bestTarget = target;
+        }
+      }
     } else {
       for (PhotonTrackedTarget target : results) {
-        if (target.getPitch() < closestPitch && target.getYaw() <= 30) {
+        if (target.getPitch() < closestPitch && target.getYaw() >= -30 && target.getYaw() <= 30) {
           closestPitch = target.getPitch();
           bestTarget = target;
         }
