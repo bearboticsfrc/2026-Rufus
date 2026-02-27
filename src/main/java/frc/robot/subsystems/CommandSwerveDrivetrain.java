@@ -69,7 +69,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   /** Notifier for updating pose based on vision measurements. */
   private final Notifier poseEstimationNotifier = new Notifier(this::poseEstimationPeriodic);
 
-  @Logged private final Vision vision = new Vision(Arrays.asList(VisionConstants.LUMAP1_CAMERA));
+  @Logged
+  private final Vision vision =
+      new Vision(Arrays.asList(VisionConstants.LEFT_THRIFTYCAM, VisionConstants.RIGHT_THRIFTYCAM));
 
   @Logged(name = "PigeonPitch")
   public double getPigeonPitch() {

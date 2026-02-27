@@ -22,21 +22,19 @@ public class VisionConstants {
   private static final String LEFT_THRIFTYCAM_NAME = "FRONT_LEFT_CAMERA";
   private static final String RIGHT_THRIFTYCAM_NAME = "FRONT_RIGHT_CAMERA";
 
-  
-
   public static final Transform3d ROBOT_TO_RIGHT_THRIFTYCAM =
       new Transform3d(
-          new Translation3d(-.26,.32,0.59),
+          new Translation3d(-.26, .32, 0.59),
           new Rotation3d(Radians.zero(), Degrees.of(-20), Degrees.zero()));
- public static final Transform3d ROBOT_TO__LEFT_THRIFTYCAM =
+  public static final Transform3d ROBOT_TO__LEFT_THRIFTYCAM =
       new Transform3d(
           new Translation3d(.20, .27, 0.61),
           new Rotation3d(Radians.zero(), Degrees.of(-20), Degrees.zero()));
 
   public static final VisionCamera LEFT_THRIFTYCAM =
-      new VisionCamera(LEFT_THRIFTYCAM_NAME,ROBOT_TO__LEFT_THRIFTYCAM);
+      new VisionCamera(LEFT_THRIFTYCAM_NAME, ROBOT_TO__LEFT_THRIFTYCAM);
   public static final VisionCamera RIGHT_THRIFTYCAM =
-      new VisionCamera(RIGHT_THRIFTYCAM_NAME,ROBOT_TO_RIGHT_THRIFTYCAM);
+      new VisionCamera(RIGHT_THRIFTYCAM_NAME, ROBOT_TO_RIGHT_THRIFTYCAM);
 
   // The standard deviations of our vision estimated poses, which affect correction rate
   public static final Matrix<N3, N1> SINGLE_TAG_STD_DEVS = VecBuilder.fill(0.001, 0.001, 0.001);
