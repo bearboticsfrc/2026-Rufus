@@ -25,11 +25,11 @@ public class VisionConstants {
   public static final Transform3d ROBOT_TO_RIGHT_THRIFTYCAM =
       new Transform3d(
           new Translation3d(-.26, .32, 0.59),
-          new Rotation3d(Radians.zero(), Degrees.of(-20), Degrees.zero()));
+          new Rotation3d(Radians.zero(), Degrees.of(-19), Degrees.zero()));
   public static final Transform3d ROBOT_TO__LEFT_THRIFTYCAM =
       new Transform3d(
           new Translation3d(.20, .27, 0.61),
-          new Rotation3d(Radians.zero(), Degrees.of(-20), Degrees.zero()));
+          new Rotation3d(Radians.zero(), Degrees.of(-15), Degrees.zero()));
 
   public static final VisionCamera LEFT_THRIFTYCAM =
       new VisionCamera(LEFT_THRIFTYCAM_NAME, ROBOT_TO__LEFT_THRIFTYCAM);
