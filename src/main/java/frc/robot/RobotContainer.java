@@ -28,8 +28,6 @@ import frc.robot.field.Field;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Turret;
-import frc.robot.subsystems.TurretAbsolutePosition;
-import frc.robot.subsystems.TurretController;
 import frc.robot.util.HubTracker;
 
 @Logged
@@ -69,12 +67,13 @@ public class RobotContainer implements AllianceReadyListener {
 
   public final HubTracker hubTracker = new HubTracker();
 
-  public final TurretController turretController =
-      new TurretController(
-          () -> drivetrain.getPose(), value -> turret.moveToAngle(value), () -> turret.getAngle());
+  //   public final TurretController turretController =
+  //       new TurretController(
+  //           () -> drivetrain.getPose(), value -> turret.moveToAngle(value), () ->
+  // turret.getAngle());
 
-  public final TurretAbsolutePosition TurretAbsolutePosition =
-      new frc.robot.subsystems.TurretAbsolutePosition();
+  //   public final TurretAbsolutePosition TurretAbsolutePosition =
+  //       new frc.robot.subsystems.TurretAbsolutePosition();
 
   /* Path follower */
   private final SendableChooser<Command> autoChooser;
@@ -128,48 +127,52 @@ public class RobotContainer implements AllianceReadyListener {
     // joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
     drivetrain.registerTelemetry(logger::telemeterize);
-    addTurretTestBindings();
+    // addTurretTestBindings();
     bindPointToHubTrigger();
 
     joystick.rightTrigger().whileTrue(fuelHunt);
   }
 
-  private void addTurretTestBindings() {
-    operator
-        .a()
-        .whileTrue(
-            turret.setAngle(
-                () -> (Degrees.of(0)).minus(drivetrain.getPose().getRotation().getMeasure())));
-    operator
-        .b()
-        .whileTrue(
-            turret.setAngle(
-                () -> (Degrees.of(90)).minus(drivetrain.getPose().getRotation().getMeasure())));
-    operator
-        .x()
-        .whileTrue(
-            turret.setAngle(
-                () -> (Degrees.of(-90)).minus(drivetrain.getPose().getRotation().getMeasure())));
-    operator
-        .y()
-        .whileTrue(
-            turret.setAngle(
-                () -> (Degrees.of(180)).minus(drivetrain.getPose().getRotation().getMeasure())));
+  //   private void addTurretTestBindings() {
+  //     operator
+  //         .a()
+  //         .whileTrue(
+  //             turret.setAngle(
+  //                 () -> (Degrees.of(0)).minus(drivetrain.getPose().getRotation().getMeasure())));
+  //     operator
+  //         .b()
+  //         .whileTrue(
+  //             turret.setAngle(
+  //                 () ->
+  // (Degrees.of(90)).minus(drivetrain.getPose().getRotation().getMeasure())));
+  //     operator
+  //         .x()
+  //         .whileTrue(
+  //             turret.setAngle(
+  //                 () ->
+  // (Degrees.of(-90)).minus(drivetrain.getPose().getRotation().getMeasure())));
+  //     operator
+  //         .y()
+  //         .whileTrue(
+  //             turret.setAngle(
+  //                 () ->
+  // (Degrees.of(180)).minus(drivetrain.getPose().getRotation().getMeasure())));
 
-    // operator.leftBumper().whileTrue(turretController.startTrackingCommand());
-    operator.leftBumper().whileTrue(turret.setAngle(() -> turret.getAngleTo(Field.getMyLeft())));
-    operator
-        .rightBumper()
-        .whileTrue(turret.setAngle(() -> turret.getAngleTo(Field.getMyOutpost())));
+  //     // operator.leftBumper().whileTrue(turretController.startTrackingCommand());
+  //     operator.leftBumper().whileTrue(turret.setAngle(() ->
+  // turret.getAngleTo(Field.getMyLeft())));
+  //     operator
+  //         .rightBumper()
+  //         .whileTrue(turret.setAngle(() -> turret.getAngleTo(Field.getMyOutpost())));
 
-    operator
-        .rightTrigger()
-        .whileTrue(
-            turret.setAngle(
-                () ->
-                    Radians.of((Math.atan2(operator.getRightX(), operator.getRightY())))
-                        .minus(drivetrain.getPose().getRotation().getMeasure())));
-  }
+  //     operator
+  //         .rightTrigger()
+  //         .whileTrue(
+  //             turret.setAngle(
+  //                 () ->
+  //                     Radians.of((Math.atan2(operator.getRightX(), operator.getRightY())))
+  //                         .minus(drivetrain.getPose().getRotation().getMeasure())));
+  //   }
 
   public void bindPointToHubTrigger() {
     operator
